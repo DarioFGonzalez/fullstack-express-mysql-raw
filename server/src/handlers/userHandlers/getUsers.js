@@ -1,3 +1,5 @@
+const isValidUUID = require('../../services/uuidvalidator');
+
 const getUsers = async (req, res) => {
     try {
         const {username} = req.query;
@@ -41,6 +43,15 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
+        if(!isValidUUID(id))
+        {
+            throw Object.assign( new Error('ID Inválido',
+                {
+                    status: 400,
+                    code: "INVALID_ID_FORMAT",
+                    timestamp: new Date().toISIString()
+                } ) );
+        }
 
         const [rows] = await req.pool.query('SELECT * FROM users WHERE id = ?', [id]);
         if(rows.length===0)
