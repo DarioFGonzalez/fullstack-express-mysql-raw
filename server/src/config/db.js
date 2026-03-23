@@ -1,0 +1,18 @@
+require('dotenv').config();
+const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+
+const mysql = require('mysql2/promise');
+
+const pool = mysql.createPool({
+    //basic connection
+    host: DB_HOST || 'localhost',
+    user: DB_USER || 'root',
+    password: DB_PASSWORD || '',
+    database: DB_NAME || 'test_db',
+    //traffic
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+module.exports = pool;
