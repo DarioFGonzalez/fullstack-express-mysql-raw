@@ -1,6 +1,6 @@
 const {Router} = require('express');
 const clientsRouter = Router();
-const { postClient } = require('../../handlers/clientHandlers/postClient');
+const postClient = require('../../handlers/clientHandlers/postClient');
 const { getClients, getClientById } = require('../../handlers/clientHandlers/getClients');
 
 clientsRouter.get('/', getClients);

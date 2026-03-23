@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const validation = require('../../services/validations');
 
 const postClient = async (req, res) => {
@@ -48,6 +49,10 @@ const postClient = async (req, res) => {
         if(contact_name) { fields.push('contact_name'); values.push(contact_name) };
         if(contact_phone) { fields.push('contact_phone'); values.push(contact_phone) };
 
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        fields.push('verification_token');
+        values.push(verificationToken);
+
         const placeHolders = fields.map( () => '?' ).join(', ');
         const insertQuery = `INSERT INTO clients (${fields.join(', ')}) VALUES (${placeHolders})`;
 
@@ -69,4 +74,4 @@ const postClient = async (req, res) => {
     }
 }
 
-module.exports = { postClient };
+module.exports = postClient;
