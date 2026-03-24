@@ -1,5 +1,30 @@
 # Devlog
 
+## [VERIFY Client] 2026-03-24
+
+### Ruta para dar de alta cliente usando token de seguridad
+
+- Archivo: `src/handlers/clientHandlers/verifyClient.js`
+- Endpoint: `GET /clients/verify/:verification_token`
+  - Validación de formato del token (hexadecimal de 64 caracteres)
+  - Búsqueda por token y actualización en una sola query usando `affectedRows`
+  - Actualizaciones:
+    - `verification_token = NULL`
+    - `verified_at = NOW()`
+    - `is_active = true`
+
+[Manejo de errores]
+- `400 INVALID_TOKEN_FORMAT` → token no cumple el formato esperado
+- `400 INVALID_OR_ALREADY_VERIFIED` → token no existe o cuenta ya activada
+
+[Optimización]
+- Uso de `affectedRows` para evitar un `SELECT` previo
+
+### Búsqueda de clientes por query actualizado
+
+- Podemos buscar por varios query a la vez
+- Implementé una forma más dinámica para concatenar clausulas WHERE y sus valores
+
 ## [POST Client] 2026-03-23
 
 ### Ruta para creación de clientes agregada

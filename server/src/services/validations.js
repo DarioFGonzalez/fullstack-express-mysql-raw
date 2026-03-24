@@ -1,6 +1,7 @@
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const emailRegex = /^[^\s@]{3,}@([^\s@]+\.)+[^\s@]{2,}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+const tokenRegex = /^[0-9a-f]{64}$/i;
 
 const isValidUUID = (uuid) => {
     if(!uuid || typeof uuid !== 'string') return false;
@@ -17,4 +18,9 @@ const isValidPassword = (password) => {
     return passwordRegex.test(password);
 }
 
-module.exports = { isValidUUID, isValidEmail, isValidPassword };
+const isValidToken = (token) => {
+    if(!token || typeof token !== 'string') return false;
+    return tokenRegex.test(token);
+}
+
+module.exports = { isValidUUID, isValidEmail, isValidPassword, isValidToken };
