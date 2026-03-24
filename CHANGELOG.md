@@ -1,5 +1,37 @@
 # Changelog
 
+## [Clients Module] - 2026-03-24
+
+### Added
+- **GET /clients/verify/:verification_token** (`src/handlers/clientHandlers/verifyClient.js`)
+  - Account activation via token
+  - Token format validation (hexadecimal, 64 chars)
+  - Single query update using `affectedRows` (no SELECT)
+  - Sets `is_active = true`, `verified_at = NOW()`, `verification_token = NULL`
+
+- **GET /clients/search** (`src/handlers/clientHandlers/clients.js`)
+  - Dynamic query builder for multiple filters
+  - Whitelist validation for allowed columns (business_name, email, is_active, tax_id, phone)
+  - Supports `LIKE` for business_name (partial match)
+  - Returns array of clients (200) even if empty
+
+- **GET /clients** (`src/handlers/clientHandlers/clients.js`)
+  - Returns all clients with filtered fields (excludes password, verification_token)
+
+- **GET /clients/:id** (`src/handlers/clientHandlers/clients.js`)
+  - Returns single client by UUID
+  - 404 if not found
+
+### Changed
+- Refactored `getClientsByQuery` to support multiple filters dynamically
+- Added whitelist validation for query parameters
+
+### Next Steps
+- [ ] POST `/clients/login` → authentication with bcrypt
+- [ ] PATCH `/clients/:id` → update client information
+- [ ] Products module (table + CRUD)
+- [ ] Invoices with invoice_items
+
 ## [Clients Module] - 2026-03-23
 
 ### Schema

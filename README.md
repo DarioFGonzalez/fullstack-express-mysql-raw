@@ -18,10 +18,17 @@ Para mantener control total sobre las consultas SQL, optimizar rendimiento, y de
 
 ## Estado actual
 
-**Módulo de clientes en desarrollo**
+**Módulo de clientes completado**
 
-- Tabla `clients` con UUID, verificación por email, y contraseñas hasheadas
-- Próximo: registro, login, y validación por token
+- Tabla `clients` con UUID, verificación y contraseñas hasheadas
+- Endpoints implementados:
+  - `POST /clients` → registro con generación de token de verificación
+  - `GET /clients/verify/:token` → activación de cuenta
+  - `GET /clients/all` → listar todos los clientes
+  - `GET /clients/search?queries=values` → búsqueda dinámica
+  - `GET /clients/:id` → obtener cliente por ID
+
+**Próximo: módulo de productos**
 
 ## Objetivo final
 
