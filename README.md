@@ -20,13 +20,16 @@ Para mantener control total sobre las consultas SQL, optimizar rendimiento, y de
 
 **Módulo de clientes completado**
 
-- Tabla `clients` con UUID, verificación y contraseñas hasheadas
+- Tabla `clients` con UUID, verificación por email y contraseñas hasheadas
 - Endpoints implementados:
   - `POST /clients` → registro con generación de token de verificación
   - `GET /clients/verify/:token` → activación de cuenta
   - `GET /clients/all` → listar todos los clientes
-  - `GET /clients/search?queries=values` → búsqueda dinámica
+  - `GET /clients/search?business_name=&email=&is_active=` → búsqueda dinámica
   - `GET /clients/:id` → obtener cliente por ID
+  - `PATCH /clients/:id` → actualizar datos permitidos
+  - `PATCH /clients/:id/change-password` → cambiar contraseña
+  - `PATCH /clients/:id/toggle-active` → activar/desactivar cliente (soft delete)
 
 **Próximo: módulo de productos**
 

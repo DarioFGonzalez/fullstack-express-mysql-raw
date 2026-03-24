@@ -1,11 +1,15 @@
 # Devlog
-## [TOGGLE Client]
 
-### Activar/desactivar cliente en bbdd
+## [TOGGLE Client] 2026-03-24
 
-- Ahora podemos archivar/activar un cliente
-- Borrar (DESTROY) los datos de un cliente también se llevaría facturas, registros, pagos, fechas... no tiene mucho sentido.
-- Opté por 'desactiarla' con toggle-client así queda desactivado pero con registros activos
+### Activar/desactivar cliente en DB
+
+- Archivo: `src/handlers/clientHandlers/updateClients.js`
+- Endpoint: `PATCH /clients/:id/toggle-active`
+- Soft delete / reactivación de clientes
+- Motivo: borrar físicamente eliminaría facturas, pagos e historial asociado
+- Implementación: `UPDATE clients SET is_active = NOT is_active WHERE id = ?`
+- Retorna mensaje de éxito
 
 ## [UPDATE Client] 2026-03-24
 

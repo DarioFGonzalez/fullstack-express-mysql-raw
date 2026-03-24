@@ -3,6 +3,24 @@
 ## [Clients Module] - 2026-03-24
 
 ### Added
+- **PATCH /clients/:id** (`src/handlers/clientHandlers/updateClients.js`)
+  - Update allowed fields: `phone`, `address`, `contact_name`, `contact_phone`, `business_name`
+  - Validates at least one field is provided
+  - Returns updated client without sensitive data
+  - Whitelist validation for updatable fields
+
+- **PATCH /clients/:id/change-password** (`src/handlers/clientHandlers/updateClients.js`)
+  - Requires `password` (current) and `newPassword`
+  - Validates `newPassword` format (min 8 chars, at least one letter and one number)
+  - Prevents reusing the same password
+  - Verifies current password with bcrypt
+  - Hashes new password with bcrypt (10 rounds) before update
+
+- **PATCH /clients/:id/toggle-active** (`src/handlers/clientHandlers/updateClients.js`)
+  - Soft delete / activate client
+  - Flips `is_active` value (0 ↔ 1)
+  - Returns updated client status
+
 - **GET /clients/verify/:verification_token** (`src/handlers/clientHandlers/verifyClient.js`)
   - Account activation via token
   - Token format validation (hexadecimal, 64 chars)
@@ -15,7 +33,7 @@
   - Supports `LIKE` for business_name (partial match)
   - Returns array of clients (200) even if empty
 
-- **GET /clients** (`src/handlers/clientHandlers/clients.js`)
+- **GET /clients/all** (`src/handlers/clientHandlers/clients.js`)
   - Returns all clients with filtered fields (excludes password, verification_token)
 
 - **GET /clients/:id** (`src/handlers/clientHandlers/clients.js`)
@@ -25,12 +43,20 @@
 ### Changed
 - Refactored `getClientsByQuery` to support multiple filters dynamically
 - Added whitelist validation for query parameters
+- Moved `validations.js` from `services/` to `utils/` for consistency
+- Created `queryBuilder.js` utility for dynamic WHERE clause generation
 
 ### Next Steps
-- [ ] POST `/clients/login` → authentication with bcrypt
-- [ ] PATCH `/clients/:id` → update client information
 - [ ] Products module (table + CRUD)
 - [ ] Invoices with invoice_items
+- [ ] JWT authentication for admin endpoints
+
+### Notes
+- All updates use parameterized queries (SQL injection safe)
+- No hard deletes - `toggle-active` handles client deactivation
+- Password update requires current password verification (security best practice)
+
+---
 
 ## [Clients Module] - 2026-03-23
 
@@ -53,17 +79,18 @@
   - `updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
 
 ### Added
-- **Validation service** (`src/services/validations.js`)
-  - `isValidUUID()` - UUID v4 format validation
-  - `isValidEmail()` - email format validation (min 3 chars before @, valid domain)
+- **Validation service** (`src/utils/validations.js`)
+  - `isValidUUID()` - UUID format validation
+  - `isValidEmail()` - email format validation
   - `isValidPassword()` - password strength validation (min 8 chars, at least one letter and one number)
 
-- **POST /clients/register** (`src/handlers/clientHandlers/postClient.js`)
+- **POST /clients** (`src/handlers/clientHandlers/postClient.js`)
   - Required fields validation (business_name, tax_id, email, password)
   - Email and password format validation
   - Password hashing with bcrypt (10 rounds)
+  - Token generation with `crypto.randomBytes(32).toString('hex')`
   - Dynamic query builder for optional fields (phone, address, contact_name, contact_phone)
-  - Returns created client without sensitive data (password, verification_token)
+  - Returns created client without sensitive data
   - Handles duplicate entries with 409 Conflict response
 
 ### Technical Decisions
@@ -72,15 +99,7 @@
 - Connection pool configured with mysql2/promise
 - No ORM - full control over queries
 
-### Next Steps
-- [ ] GET `/clients/verify` → account activation via token
-- [ ] GET `/clients` → list all clients (with pagination)
-- [ ] GET `/clients/:id` → get client by ID
-- [ ] POST `/clients/login` → authentication with last_login update
-- [ ] PATCH `/clients/:id` → update client information
-- [ ] Products module (table + CRUD)
-
 ### Notes
-- All inserts/updates use placeholders (`?`) to prevent SQL injection
+- All inserts use placeholders (`?`) to prevent SQL injection
 - is_active defaults to false until email verification
 - verification_token to be sent via email (Nodemailer pending)
