@@ -1,4 +1,5 @@
-const validation = require('../../services/validations');
+const validation = require('../../utils/validations');
+const { queryBuilder } = require('../../utils/queryBuilder');
 const selectedFields = 'id, is_active, business_name, tax_id, email, phone, address, contact_name, contact_phone, created_at, updated_at, last_login, verified_at';
 
 const getAllClients = async (req, res) => {
@@ -15,17 +16,7 @@ const getAllClients = async (req, res) => {
 
 const getClientsByQuery = async (req, res) => {
     try {
-        const allowedColumns = ['business_name', 'email', 'is_active', 'tax_id', 'phone'];
-
-        const conditions = [];
-        const values = [];
-
-        for( const [key, value] of Object.entries(req.query) ) {
-            if(allowedColumns.includes(key)) {
-                conditions.push(`${key} = ?`);
-                values.push(value);
-            }
-        }
+        const { conditions, values } = queryBuilder(req.query);
 
         const whereCondition = conditions.join(' AND ');
         

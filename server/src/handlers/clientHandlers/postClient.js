@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const validation = require('../../services/validations');
+const validation = require('../../utils/validations');
 
 const postClient = async (req, res) => {
     try {

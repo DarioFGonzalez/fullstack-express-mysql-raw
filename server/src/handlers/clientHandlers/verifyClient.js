@@ -1,4 +1,4 @@
-const validation = require('../../services/validations');
+const validation = require('../../utils/validations');
 
 const verifyClient = async (req, res) => {
     try {
