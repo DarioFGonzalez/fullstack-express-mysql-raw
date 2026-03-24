@@ -1,10 +1,12 @@
 const {Router} = require('express');
 const clientsRouter = Router();
 const postClient = require('../../handlers/clientHandlers/postClient');
-const { getClients, getClientById } = require('../../handlers/clientHandlers/getClients');
+const { getAllClients, getClientById, getClientsByQuery } = require('../../handlers/clientHandlers/getClients');
 
-clientsRouter.get('/', getClients);
-clientsRouter.get('/:id', getClientById);
 clientsRouter.post('/', postClient);
+
+clientsRouter.get('/all', getAllClients);
+clientsRouter.get('/search', getClientsByQuery);
+clientsRouter.get('/:id', getClientById);
 
 module.exports = clientsRouter;
