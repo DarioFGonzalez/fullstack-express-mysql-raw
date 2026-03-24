@@ -15,6 +15,7 @@ clientsRouter.get('/search', getClientsByQuery);
 
 clientsRouter.patch('/:id', updateClient);
 clientsRouter.patch('/:id/change-password', updatePassword);
+
 clientsRouter.patch('/:id/toggle-active', toggleClient);
 
 module.exports = clientsRouter;

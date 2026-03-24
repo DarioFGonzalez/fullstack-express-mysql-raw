@@ -137,7 +137,44 @@ const updatePassword = async (req, res) =>
 
 const toggleClient = async (req, res) =>
 {
+    try {
+        const { id } = req.params;
+        if(!id)
+        {
+            throw Object.assign( new Error('Se necesita recibir un ID'),
+            {
+                status: 400,
+                code: "NO_ID_RECIEVED",
+                timestamp: new Date().toISOString()
+            })
+        }
+        if(!isValidUUID(id))
+        {
+            throw Object.assign( new Error('ID recibido con formato inválido'),
+            {
+                status: 400,
+                code: "INVALID_ID_FORMAT",
+                timestamp: new Date().toISOString()
+            })
+        }
 
+        const [result] = await req.pool.query( 'UPDATE clients SET is_active = NOT is_active WHERE id = ?', [id] );
+
+        if(result.affectedRows===0)
+        {
+            throw Object.assign( new Error('Cliente no encontrado'),
+            {
+                status: 404,
+                code: 'CLIENT_NOT_FOUND',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        res.status(200).json( { message: 'Estado del cliente actualizado'} );
+        } catch(error) {
+        console.error( 'Error en toggleClient:', error );
+        return res.status(error.status||500).json( {error: error.message||error} );
+    }
 }
 
 module.exports = { updateClient, updatePassword, toggleClient };

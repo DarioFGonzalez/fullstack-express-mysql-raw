@@ -1,4 +1,11 @@
 # Devlog
+## [TOGGLE Client]
+
+### Activar/desactivar cliente en bbdd
+
+- Ahora podemos archivar/activar un cliente
+- Borrar (DESTROY) los datos de un cliente también se llevaría facturas, registros, pagos, fechas... no tiene mucho sentido.
+- Opté por 'desactiarla' con toggle-client así queda desactivado pero con registros activos
 
 ## [UPDATE Client] 2026-03-24
 
