@@ -78,7 +78,6 @@ const updatePassword = async (req, res) =>
             } );
         }
 
-        
         const [rows] = await req.pool.query('SELECT password FROM clients WHERE id = ?', [id]);
 
         if(rows.length===0)

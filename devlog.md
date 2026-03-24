@@ -1,5 +1,22 @@
 # Devlog
 
+## [UPDATE Client] 2026-03-24
+
+### Ruta para actualizar datos del cliente
+
+- Archivo: `src/handlers/clientHandlers/updateClients.js`
+- Endpoints:
+  - [PATCH] /:id
+  - [PATCH] /:id/change-password
+- Para actualizar datos generales del cliente tenemos una lista de "fields autorizados".
+- Checkeamos que esté intentando de cambiar algo autorizado y lo sumamos al query
+- En caso de ser la contraseña, tenemos una ruta específica para eso:
+  - Validamos el formato de la nueva contraseña
+  - Comparamos con la anterior para evitar reemplazar con lo mismo
+  - Verificamos que la contraseña anterior sea correcta
+  - Hasheamos la contraseña nueva (bcrypt.hash)
+  - Enviamos el UPDATE SET para actualizar
+
 ## [VERIFY Client] 2026-03-24
 
 ### Ruta para dar de alta cliente usando token de seguridad
