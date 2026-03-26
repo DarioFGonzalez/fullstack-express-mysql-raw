@@ -14,4 +14,22 @@ const queryBuilder = (queries) => {
     return { conditions, values };
 }
 
-module.exports = queryBuilder;
+const productQueryBuilder = (queries) => {
+    const allowedColumns = [
+        'sku', 'name', 'description', 'category', 'unit_price', 'stock', 'reserved_stock', 'is_active'
+    ];
+
+    const columns = [];
+    const values = [];
+
+    for( const [key, value] of Object.entries(queries) ) {
+        if(allowedColumns.includes(key)) {
+            columns.push(key);
+            values.push(value);
+        }
+    }
+
+    return { columns, values };
+}
+
+module.exports = { queryBuilder, productQueryBuilder };
