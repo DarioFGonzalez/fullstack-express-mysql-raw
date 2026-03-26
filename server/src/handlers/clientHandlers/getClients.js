@@ -57,7 +57,7 @@ const getClientById = async (req, res) => {
         res.status(200).json(rows[0]);
     } catch(error) {
         console.error('Error en /clients/:id:', error);
-        res.status(500).json( { error: 'Error al traer el cliente por id' } );
+        res.status(error.status||500).json( { error: 'Error al traer el cliente por id' } );
     }
 };
 

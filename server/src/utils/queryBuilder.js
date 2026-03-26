@@ -32,4 +32,31 @@ const productQueryBuilder = (queries) => {
     return { columns, values };
 }
 
-module.exports = { queryBuilder, productQueryBuilder };
+const searchProductByQuery = (queries) =>
+{
+    const allowedColumns = [
+    'sku', 'name', 'description', 'category', 'unit_price', 'stock', 'reserved_stock', 'is_active'
+    ];
+
+    const conditions = [];
+    const values = [];
+
+    for( const [key, value] of Object.entries(queries) ) {
+        if(allowedColumns.includes(key)) {
+            if(key==='sku')
+            {
+                conditions.push(`${key} = ?`)
+                values.push(value)
+            }
+            else
+            {
+                conditions.push(`${key} LIKE ?`);
+                values.push(`%${value}%`);
+            }
+        }
+    }
+
+    return { conditions, values }
+}
+
+module.exports = { queryBuilder, productQueryBuilder, searchProductByQuery };
