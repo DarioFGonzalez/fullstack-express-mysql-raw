@@ -31,7 +31,18 @@ Para mantener control total sobre las consultas SQL, optimizar rendimiento, y de
   - `PATCH /clients/:id/change-password` → cambiar contraseña
   - `PATCH /clients/:id/toggle-active` → activar/desactivar cliente (soft delete)
 
-**Próximo: módulo de productos**
+**Módulo de productos completado**
+
+- Tabla `products` con UUID, SKU único, stock y stock reservado
+- Endpoints implementados:
+  - `POST /products` → crear producto
+  - `GET /products/all` → listar todos los productos
+  - `GET /products/search?sku=&name=&category=&is_active=` → búsqueda dinámica
+  - `GET /products/:id` → obtener producto por ID
+  - `PATCH /products/:id` → actualizar datos permitidos
+  - `PATCH /products/:id/toggle-active` → activar/desactivar producto (soft delete)
+
+**Próximo: módulo de carritos (carts + cart_items)**
 
 ## Objetivo final
 

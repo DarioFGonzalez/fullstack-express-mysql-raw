@@ -1,5 +1,45 @@
 # Devlog
 
+## [PRODUCTS CRUD] 2026-03-25
+
+### CRUD completo para products
+
+- Archivos: `src/handlers/productHandlers`
+  - `postProduct.js` → creación de productos
+  - `getProducts.js` → `getAllProducts`, `getProductById`, `getProductsByQuery`
+  - `updateProduct.js` → `updateProduct`, `toggleProduct`
+
+- Archivo: `src/utils/queryBuilder.js`
+  - `productQueryBuilder` → arma columnas y valores para POST
+  - `searchProductByQuery` → arma conditions y values para búsqueda dinámica
+  - `updateProductQuery` → arma conditions y values para actualizaciones
+
+- Endpoints:
+  - `POST /products`
+  - `GET /products/all`
+  - `GET /products/search?sku=&name=&category=&is_active=`
+  - `GET /products/:id`
+  - `PATCH /products/:id`
+  - `PATCH /products/:id/toggle-active`
+
+- Campos permitidos:
+  - Creación: `sku`, `name`, `description`, `category`, `unit_price`, `stock`, `reserved_stock`, `is_active`
+  - Actualización: `name`, `description`, `unit_price`, `stock`, `reserved_stock`
+  - Búsqueda: `sku` (exacta), `name` (parcial), `category` (parcial), `is_active` (exacta)
+
+- Manejo de errores:
+  - `400 MISSING_KEY_INFORMATION` → faltan datos obligatorios
+  - `400 INVALID_ID_FORMAT` → UUID inválido
+  - `400 MISSING_SEARCHING_PARAMETERS` → búsqueda sin filtros
+  - `404 PRODUCT_NOT_FOUND` → producto no existe
+  - `409` → sku duplicado
+
+### Notas
+- `sku` es único en la tabla
+- Soft delete mediante `is_active`
+- Todas las queries usan placeholders (SQL injection safe)
+- Búsqueda con `LIKE` para `name` y `category`
+
 ## [TOGGLE Client] 2026-03-24
 
 ### Activar/desactivar cliente en DB
