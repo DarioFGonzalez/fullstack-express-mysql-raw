@@ -59,4 +59,21 @@ const searchProductByQuery = (queries) =>
     return { conditions, values }
 }
 
-module.exports = { queryBuilder, productQueryBuilder, searchProductByQuery };
+const updateProductQuery = (queries) =>
+{
+    const allowedColumns = [ 'name', 'description', 'unit_price', 'stock', 'reserved_stock' ];
+
+    const conditions = [];
+    const values = [];
+
+    for( const [key, value] of Object.entries(queries) ) {
+        if(allowedColumns.includes(key)) {
+            conditions.push(`${key} = ?`)
+            values.push(value)
+        }
+    }
+
+    return { conditions, values }
+}
+
+module.exports = { queryBuilder, productQueryBuilder, searchProductByQuery, updateProductQuery };
