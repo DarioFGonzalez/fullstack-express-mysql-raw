@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
 const mysql = require('mysql2/promise');

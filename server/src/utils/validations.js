@@ -23,4 +23,29 @@ const isValidToken = (token) => {
     return tokenRegex.test(token);
 }
 
-module.exports = { isValidUUID, isValidEmail, isValidPassword, isValidToken };
+const validateId = (id) => {
+        if(!id)
+        {
+            throw Object.assign( new Error('ID no recibido'),
+            {
+                status: 400,
+                code: "NO_ID_RECEIVED",
+                timestamp: new Date().toISOString()
+            })
+        }
+        if(!isValidUUID(id))
+        {
+            throw Object.assign( new Error('Formato del ID inválido'),
+            {
+                status:400,
+                code: "INVALID_ID_FORMAT",
+                timestamp: new Date().toISOString()
+            })
+        }
+        return true;
+}
+
+module.exports = {
+    isValidUUID, isValidEmail, isValidPassword, isValidToken,
+    validateId,
+ };
