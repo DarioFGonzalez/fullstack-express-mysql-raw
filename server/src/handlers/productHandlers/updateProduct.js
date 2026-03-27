@@ -1,28 +1,11 @@
-const {isValidUUID} = require('../../utils/validations');
+const {isValidUUID, validateId} = require('../../utils/validations');
 const { updateProductQuery } = require('../../utils/queryBuilder');
 
 const updateProduct = async (req, res) => {
     try {
         const {id} = req.params;
 
-        if(!id)
-        {
-            throw Object.assign( new Error('ID no recibido'),
-            {
-                status: 400,
-                code: "NO_ID_RECEIVED",
-                timestamp: new Date().toISOString()
-            })
-        }
-        if(!isValidUUID(id))
-        {
-            throw Object.assign( new Error('Formato del ID inválido'),
-            {
-                status:400,
-                code: "INVALID_ID_FORMAT",
-                timestamp: new Date().toISOString()
-            })
-        }
+        validateId(id);
 
         const { conditions, values } = updateProductQuery(req.body);
         
