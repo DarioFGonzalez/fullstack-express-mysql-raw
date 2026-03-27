@@ -1,5 +1,22 @@
 # Devlog
 
+## [INVOICES Post] 2026-03-27
+
+### RUTA Post para invoices
+
+- Archivos: `src/handlers/invoiceHandlers/postInvoice`
+  - Necesitamos el id del cliente y el id del producto para crear las primeras relacionales
+  - Cliente>Invoice (one-to-many) y crear la primera entrada de la tabla relacional Invoice>Products (invoice_items)
+
+### Planificación para rutas de modicicación de invoices
+
+- [PATCH] /:id          → Modificar el invoice existente: Quitar/agregar/modificar items. 
+- [POST]  /:id/confirm  → Confirmar el invoice. Crear invoice_id, due_date, agregar reserved_stock a cada producto involucrado.
+- [DELETE]  /:id        → Cuando pasa de draft a cancelled, al no haber ningún cambio en DDBB simplemente se borra.
+- [POST]  /:id/deliver  → Cuando es retirado de depósito. Descontar stock real de cada producto, cambiar estado del invoice.
+- [POST]  /:id/cancel   → Después de confirmado, al cancelar hay que descontar el reserved_stock de los productos y archivar.
+- [PATCH] /:id/toggle-invoice → SOFT Delete
+
 ## [PRODUCTS CRUD] 2026-03-25
 
 ### CRUD completo para products
