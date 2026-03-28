@@ -32,15 +32,8 @@ const getClientsByQuery = async (req, res) => {
 const getClientById = async (req, res) => {
     try {
         const { id } = req.params;
-        if(!validation.isValidUUID(id))
-        {
-            throw Object.assign( new Error('ID Inválido'),
-                {
-                    status: 400,
-                    code: "INVALID_ID_FORMAT",
-                    timestamp: new Date().toISOString()
-                } );
-        }
+
+        validation.validateId(id);
 
         const [rows] = await req.pool.query(`SELECT ${selectedFields} FROM clients WHERE id = ?`, [id]);
         if(rows.length===0)
@@ -53,6 +46,9 @@ const getClientById = async (req, res) => {
                     timestamp: new Date().toISOString()
                 });
         }
+        const [facturas] = await req.pool.query(`SELECT invoices.id AS invoice_id, invoices.status AS status, invoices.issue_date AS issue_date, invoices.total AS total FROM invoices WHERE invoices.client_id = ?`, [id])
+
+        rows[0].invoices = facturas;
 
         res.status(200).json(rows[0]);
     } catch(error) {
