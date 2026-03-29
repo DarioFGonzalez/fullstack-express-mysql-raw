@@ -29,10 +29,20 @@ const getInvoiceById = async (req, res) => {
             })
         }
 
-        const getProductsRelatedToInvoice = 'SELECT products.id AS product_id, products.name AS product_name, invoice_items.unit_price AS price_at_addition, invoice_items.quantity AS quantity, invoice_items.subtotal AS subtotal FROM invoices JOIN invoice_items ON invoice_items.invoice_id = invoices.id JOIN products ON invoice_items.product_id = products.id WHERE invoices.id = ?'
+        const getProductsRelatedToInvoice =
+        `SELECT
+        products.id AS product_id,
+        products.name AS product_name,
+        invoice_items.unit_price AS price_at_addition,
+        invoice_items.quantity AS quantity,
+        invoice_items.subtotal AS subtotal
+        FROM invoices
+        JOIN invoice_items ON invoice_items.invoice_id = invoices.id
+        JOIN products ON invoice_items.product_id = products.id
+        WHERE invoices.id = ?`;
         
         const [productsRelated] = await req.pool.query( getProductsRelatedToInvoice, id );
-
+        
         invoice[0].products = productsRelated;
 
         return res.status(200).json( invoice[0] );

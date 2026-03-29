@@ -36,8 +36,6 @@ const updateInvoice = async (req, res) => {
         const findExistingRelationQuery = 'SELECT * FROM invoice_items WHERE invoice_items.product_id = ? AND invoice_items.invoice_id = ?';
         const [existingRelation] = await req.pool.query(findExistingRelationQuery, [product_id, id]);
 
-        console.log( "unit_price: ", unit_price, "\nstock: ", stock, "\nreserved_stock: ", reserved_stock);
-
         if(reserved_stock + quantity > stock)
         {
             throw Object.assign( new Error('Insuficiente stock para agregar al carrito'),
@@ -49,16 +47,28 @@ const updateInvoice = async (req, res) => {
         }
 
         const subtotal = unit_price * quantity;
-        if(existingRelation.length===0)
+
+        const createOrUpdateRelationQuery =
+            `INSERT INTO invoice_items
+            (invoice_id, product_id, quantity, unit_price, subtotal)
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                quantity = VALUES(quantity),
+                subtotal = VALUES(subtotal),
+                updated_at = CURRENT_TIMESTAMP`;   
+        
+        const [updatedInvoice] = await req.pool.query(createOrUpdateRelationQuery, [id, product_id, quantity, unit_price, subtotal]);
+        if(updatedInvoice.affectedRows===0)
         {
-            console.log();            
-            return res.status(200).json( {message: "Relación inexistente, crear" });
+            throw Object.assign( new Error('Error actualizando relacional'),
+            {
+                status: 500,
+                code: 'ERROR_UPDATING_INVOICE',
+                timestamp: new Date().toISOString()
+            })
         }
 
-        return res.status(200).json({ message: "Relación existente, modificar" });
-
-        //actualizar la que ya existe usando existingRelation.quantity+=quantity;
-        return res.status(200).json(existingRelation)
+        return res.status(200).json({updated: 'Carrito actualizado'});
     } catch(error) {
         console.error( "Error actualizando invoice:", error.code||error );
         return res.status(error.status||500).json( {error: error.message || error} );
