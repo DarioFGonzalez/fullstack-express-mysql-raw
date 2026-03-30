@@ -1,76 +1,121 @@
 const validation = require('../../utils/validations');
-const {invoiceUpdateQueryBuilder} = require('../../utils/queryBuilder');
 
 const updateInvoice = async (req, res) => {
     try {
         const { id } = req.params;
         validation.validateId(id);
 
-        const { product_id, quantity } = req.body;
-        if(!product_id || !quantity)
-        {
-            throw Object.assign( new Error('Faltan datos necesarios para la relación'),
+        const productIds = [];
+
+        const productsBatch = req.body;
+        productsBatch.forEach( ( productInfo ) => {
+            if(productInfo.quantity==undefined || !productInfo.product_id)
             {
-                status: 400,
-                code: 'MISSING_RELATION_DATA',
-                timestamp: new Date().toISOString()
-            })
-        }
-        validation.validateId(id);
+                throw Object.assign( new Error('Faltan datos necesarios para la relación'),
+                {
+                    status: 400,
+                    code: 'MISSING_RELATION_DATA',
+                    timestamp: new Date().toISOString()
+                })
+            }
+            validation.validateId(productInfo.product_id);
+            productIds.push(productInfo.product_id);
+        })
 
-        const findProductByIdQuery = 'SELECT products.unit_price, products.stock, products.reserved_stock FROM products WHERE products.id = ?';
-        const [product] = await req.pool.query(findProductByIdQuery, [product_id]);
-
-        if(product.length===0)
+        const [thisInvoice] = await req.pool.query('SELECT * FROM invoices WHERE id = ?', [ id ]);
+        if(thisInvoice.length===0)
         {
-            throw Object.assign( new Error('Producto no encontrado'),
+            throw Object.assign( new Error('Invoice inexistente'),
             {
                 status: 404,
-                code: 'PRODUCT_NOT_FOUND',
+                code: 'INVOICE_NOT_FOUND',
                 timestamp: new Date().toISOString()
             })
         }
 
-        const { unit_price, stock, reserved_stock } = product[0];
-        
-        const findExistingRelationQuery = 'SELECT * FROM invoice_items WHERE invoice_items.product_id = ? AND invoice_items.invoice_id = ?';
-        const [existingRelation] = await req.pool.query(findExistingRelationQuery, [product_id, id]);
+        const placeHolders = productIds.map( () => '?' ).join(', ');
 
-        if(reserved_stock + quantity > stock)
+        const findProductsByIdQuery = `SELECT products.id AS product_id, products.unit_price, products.stock, products.reserved_stock FROM products WHERE products.id IN (${placeHolders})`;
+
+        const [allProductsInfo] = await req.pool.query( findProductsByIdQuery, productIds );
+        if(allProductsInfo.length!==productIds.length)
         {
-            throw Object.assign( new Error('Insuficiente stock para agregar al carrito'),
+            throw Object.assign( new Error('Error trayendo información de productos'),
             {
-                status: 409,
-                code: "INSUFFICIENT_STOCK",
+                status: 400,
+                code: "ERROR_FETCHING_PRODUCTS_INFO",
                 timestamp: new Date().toISOString()
             })
         }
 
-        const subtotal = unit_price * quantity;
+        const finalValues = [];
+        const finalPlaceholders = [];
 
-        const createOrUpdateRelationQuery =
-            `INSERT INTO invoice_items
-            (invoice_id, product_id, quantity, unit_price, subtotal)
-            VALUES (?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                quantity = VALUES(quantity),
-                subtotal = VALUES(subtotal),
-                updated_at = CURRENT_TIMESTAMP`;   
-        
-        const [updatedInvoice] = await req.pool.query(createOrUpdateRelationQuery, [id, product_id, quantity, unit_price, subtotal]);
-        if(updatedInvoice.affectedRows===0)
+        const toDestroyValues = [];
+        const toDestroyPlaceholders = [];
+
+        productsBatch.forEach( (pInfo) => {
+            const fetchedProductInfo = allProductsInfo.find( (x) => x.product_id === pInfo.product_id );
+            if(!fetchedProductInfo)
+            {
+                throw Object.assign( new Error(`Error trayendo información sobre el producto id ${pInfo.product_id}`),
+                {
+                    status: 400,
+                    code: "ERROR_FETCHING_PRODUCT_INFO",
+                    timestamp: new Date().toISOString()
+                })
+            }
+            if(pInfo.quantity<=0)
+            {
+                toDestroyValues.push(pInfo.product_id);
+                toDestroyPlaceholders.push('?');
+            }
+            else
+            {
+                if(fetchedProductInfo.reserved_stock + pInfo.quantity <= fetchedProductInfo.stock)
+                {
+                    finalValues.push(id, pInfo.product_id, pInfo.quantity, fetchedProductInfo.unit_price, pInfo.quantity * fetchedProductInfo.unit_price )
+                    finalPlaceholders.push( '(?, ?, ?, ?, ?)' );
+                }
+                else
+                {
+                    throw Object.assign( new Error(`Stock insuficiente en producto ID ${pInfo.product_id}`),
+                    {
+                        status: 400,
+                        code: "INSUFFICIENT_STOCK",
+                        timestamp: new Date().toISOString()
+                    })
+                }
+            }
+        })
+
+        if(toDestroyValues.length!==0)
         {
-            throw Object.assign( new Error('Error actualizando relacional'),
-            {
-                status: 500,
-                code: 'ERROR_UPDATING_INVOICE',
-                timestamp: new Date().toISOString()
-            })
+            const destroyBatchQuery =
+            `DELETE
+            FROM invoice_items
+            WHERE invoice_id = ?
+            AND product_id IN (${toDestroyPlaceholders.join(', ')})`;
+
+            await req.pool.query(destroyBatchQuery, [id, ...toDestroyValues]);
         }
 
-        return res.status(200).json({updated: 'Carrito actualizado'});
+        if(finalPlaceholders.length > 0)
+        {
+            const insertOrUpdateBatchQuery = `INSERT INTO invoice_items
+                (invoice_id, product_id, quantity, unit_price, subtotal)
+                VALUES ${finalPlaceholders.join(', ')}
+                ON DUPLICATE KEY UPDATE
+                    quantity = VALUES(quantity),
+                    subtotal = VALUES(subtotal),
+                    updated_at = CURRENT_TIMESTAMP`;
+            
+            await req.pool.query( insertOrUpdateBatchQuery, finalValues );
+        }
+
+        return res.status(200).json( { message: 'Invoice actualizado' } );
     } catch(error) {
-        console.error( "Error actualizando invoice:", error.code||error );
+        console.error( "Error actualizando muchos invoice:", error.code||error );
         return res.status(error.status||500).json( {error: error.message || error} );
     }
 }

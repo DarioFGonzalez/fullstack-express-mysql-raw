@@ -76,23 +76,5 @@ const updateProductQuery = (queries) =>
     return { conditions, values }
 }
 
-const invoiceUpdateQueryBuilder = (queries) =>
-{
-    const allowedColumns = [ 'status', 'invoice_number', 'issue_date', 'due_date', 'payment_terms', 'total', 'notes' ];
-
-    const columns = [];
-    const values = [];
-
-    for( const [key, value] of Object.entries(queries) ) {
-        if(allowedColumns.includes(key)) {
-            columns.push(`${key} = ?`);
-            values.push(value);
-        }
-    }
-
-    return { columns, values };
-}
-
 module.exports = { queryBuilder,
-    productQueryBuilder, searchProductByQuery, updateProductQuery,
-    invoiceUpdateQueryBuilder };
+    productQueryBuilder, searchProductByQuery, updateProductQuery };
