@@ -1,3 +1,4 @@
+const { invoiceByQueryBuilder } = require('../../utils/queryBuilder');
 const validation = require('../../utils/validations');
 
 const getAllInvoices = async (req, res) => {
@@ -52,4 +53,19 @@ const getInvoiceById = async (req, res) => {
     }
 }
 
-module.exports = { getAllInvoices, getInvoiceById };
+const getInvoicesByQuery = async (req, res) => {
+    try {
+        const { whereClause, values } = invoiceByQueryBuilder(req.query);
+
+        console.log("whereClause: ", whereClause, "\nvalues: ", values);
+        
+        const [rows] = await req.pool.query(`SELECT * FROM invoices WHERE ${whereClause}`, values);
+        return res.status(200).json( rows );
+    }
+    catch(error) {
+        console.error('Error en /clients:', error.code || error);
+        res.status(error.status || 500).json( { error: error.message || 'Error interno' } );
+    }
+};
+
+module.exports = { getAllInvoices, getInvoiceById, getInvoicesByQuery };
