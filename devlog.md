@@ -1,5 +1,54 @@
 # Devlog
 
+## [INVOICES Module] 2026-03-31
+
+### CRUD completo para invoices
+
+- Archivos en `src/handlers/invoiceHandlers/`:
+  - `postInvoice.js` → creación de invoice en draft con primer item
+  - `getInvoices.js` → `getAllInvoices`, `getInvoiceById`, `getInvoicesByQuery`
+  - `updateInvoice.js` → `updateInvoice` (batch upsert + delete on quantity 0)
+
+- Helpers en `src/utils/queryBuilder.js`:
+  - `invoiceByQueryBuilder` → construcción dinámica de WHERE clause con rangos y filtros exactos
+
+### Endpoints implementados
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/invoices` | Crear invoice en draft con primer item |
+| GET | `/invoices/all` | Listar todos los invoices |
+| GET | `/invoices/search?client_id=&status=&total_min=&total_max=&issue_date_from=&issue_date_to=` | Búsqueda con filtros exactos y rangos |
+| GET | `/invoices/:id` | Obtener invoice por ID con sus items |
+| PATCH | `/invoices/:id` | Batch update: insert/update items (quantity > 0), delete items (quantity = 0) |
+
+### Filtros soportados en search
+
+**Exactos:** `client_id`, `status`, `payment_terms`, `invoice_number`
+
+**Rangos numéricos:** `total_min`, `total_max`
+
+**Rangos de fechas:** `issue_date_from`, `issue_date_to`, `due_date_from`, `due_date_to`, `paid_at_from`, `paid_at_to`
+
+### Manejo de errores
+- `400 INVALID_ID_FORMAT` → UUID inválido
+- `400 MISSING_SEARCH_PARAMETERS` → búsqueda sin filtros
+- `400 INVALID_STATUS` → status no permitido
+- `400 INVALID_PAYMENT_TERMS` → payment_terms no permitido
+- `404 INVOICE_NOT_FOUND` → invoice no existe
+
+### Notas
+- Carrito = invoice en estado `draft`
+- Un cliente puede tener un solo `draft` a la vez
+- Cantidad 0 en update → elimina el item del carrito
+- Búsqueda con rangos usa `BETWEEN` (si vienen ambos límites) o `>=` / `<=` (si viene solo uno)
+
+### Próximos pasos (transacciones)
+- [ ] `POST /invoices/:id/confirm` → reservar stock, generar número/fechas
+- [ ] `POST /invoices/:id/deliver` → descontar stock real
+- [ ] `POST /invoices/:id/paid` → marcar como pagado
+- [ ] `POST /invoices/:id/cancel` → liberar stock reservado
+
 ## [INVOICES Post] 2026-03-27
 
 ### RUTA Post para invoices

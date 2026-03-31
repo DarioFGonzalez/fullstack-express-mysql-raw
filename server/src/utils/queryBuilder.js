@@ -1,4 +1,4 @@
-const { validateId, isValidUUID } = require("./validations");
+const { isValidUUID } = require("./validations");
 
 const queryBuilder = (queries) => {
     const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name'];

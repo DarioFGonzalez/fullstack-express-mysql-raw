@@ -1,54 +1,172 @@
-# Fullstack Express + MySQL (Raw Queries)
+# 🏭 Fullstack Express + MySQL (Raw Queries)
 
-## ¿Qué es esto?
+API REST para gestión de pedidos y facturación B2B (mayorista).  
+Sistema completo con manejo de stock reservado, ciclo de vida de facturas y operaciones transaccionales.  
+**Sin ORM - queries SQL puras.**
 
-Una plataforma de gestión de pedidos y facturación para empresas mayoristas.  
-Permite registrar clientes (minoristas), administrar productos, generar facturas con plazos de pago, y ofrecer un portal para que los clientes consulten sus facturas y vencimientos.
+---
 
-## Tecnologías
+## 🚀 Tecnologías utilizadas
 
-- **Backend**: Node.js + Express
-- **Base de datos**: MySQL (queries puras, sin ORM)
-- **Frontend**: React (en desarrollo)
-- **Autenticación**: bcrypt + JWT
+- Node.js + Express
+- MySQL (mysql2/promise)
+- bcrypt
+- crypto (tokens)
+- dotenv
 
-## ¿Por qué sin ORM?
+---
 
-Para mantener control total sobre las consultas SQL, optimizar rendimiento, y demostrar conocimiento profundo de bases de datos relacionales.
+## 📂 Estructura del proyecto
 
-## Estado actual
+```
+src/
+├── handlers/          # Controladores (req/res)
+├── utils/             # Validaciones, query builders
+├── config/            # DB connection pool
+├── routes/            # Definición de endpoints
+└── server.js          # Configuración Express
+```
 
-**Módulo de clientes completado**
+---
 
-- Tabla `clients` con UUID, verificación por email y contraseñas hasheadas
-- Endpoints implementados:
-  - `POST /clients` → registro con generación de token de verificación
-  - `GET /clients/verify/:token` → activación de cuenta
-  - `GET /clients/all` → listar todos los clientes
-  - `GET /clients/search?business_name=&email=&is_active=` → búsqueda dinámica
-  - `GET /clients/:id` → obtener cliente por ID
-  - `PATCH /clients/:id` → actualizar datos permitidos
-  - `PATCH /clients/:id/change-password` → cambiar contraseña
-  - `PATCH /clients/:id/toggle-active` → activar/desactivar cliente (soft delete)
+## 📌 La aplicación sigue una arquitectura:
 
-**Módulo de productos completado**
+**Routes → Handlers → Utils → Database**
 
-- Tabla `products` con UUID, SKU único, stock y stock reservado
-- Endpoints implementados:
-  - `POST /products` → crear producto
-  - `GET /products/all` → listar todos los productos
-  - `GET /products/search?sku=&name=&category=&is_active=` → búsqueda dinámica
-  - `GET /products/:id` → obtener producto por ID
-  - `PATCH /products/:id` → actualizar datos permitidos
-  - `PATCH /products/:id/toggle-active` → activar/desactivar producto (soft delete)
+### Esto permite:
+- Separar responsabilidades
+- Reutilizar lógica (query builders, validaciones)
+- Mantener el código limpio y testeable
 
-**Próximo: módulo de carritos (carts + cart_items)**
+---
 
-## Objetivo final
+## 🔐 Autenticación (próximo paso)
 
-Un sistema funcional donde un mayorista pueda:
+- JWT para proteger rutas sensibles
+- Middleware de autenticación
+- Roles: admin / cliente
 
-- Registrar sus clientes
-- Gestionar productos y stock
-- Emitir facturas con plazos de pago
-- Dar acceso a sus clientes para consultar facturas y vencimientos
+---
+
+## ✅ Validación de datos
+
+- Helpers en `utils/validations.js`
+- Validación de UUID, email, password, token, etc.
+- Whitelist de columnas permitidas para búsquedas dinámicas
+- Validación de enums (status, payment_terms)
+
+---
+
+## 🧠 Lógica de negocio clave
+
+### Manejo de stock profesional
+- `stock` → stock físico real
+- `reserved_stock` → stock reservado en pedidos confirmados
+- Ciclo: draft → confirm (reserva) → deliver (descarga)
+
+### Transacciones SQL
+- Confirmación de pedido: valida stock, reserva, genera número/fechas
+- Entrega: descuenta stock real y libera reserva
+- Cancelación: libera reserva
+
+### Carrito como invoice en draft
+- Un solo invoice por cliente en `draft`
+- Items en `invoice_items`
+- Cantidad 0 = eliminar item
+
+---
+
+## 📌 Endpoints
+
+### Clientes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/clients` | Registro con token de verificación |
+| GET | `/clients/verify/:token` | Activación de cuenta |
+| GET | `/clients/all` | Listar todos |
+| GET | `/clients/search?business_name=&email=&is_active=` | Búsqueda dinámica |
+| GET | `/clients/:id` | Obtener por ID |
+| PATCH | `/clients/:id` | Actualizar datos |
+| PATCH | `/clients/:id/change-password` | Cambiar contraseña |
+| PATCH | `/clients/:id/toggle-active` | Soft delete |
+
+### Productos
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/products` | Crear producto |
+| GET | `/products/all` | Listar todos |
+| GET | `/products/search?sku=&name=&category=&is_active=` | Búsqueda dinámica |
+| GET | `/products/:id` | Obtener por ID |
+| PATCH | `/products/:id` | Actualizar |
+| PATCH | `/products/:id/toggle-active` | Soft delete |
+
+### Facturas / Pedidos (Invoices)
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/invoices` | Crear carrito (draft) con primer item |
+| GET | `/invoices/all` | Listar todas |
+| GET | `/invoices/search?client_id=&status=&total_min=&total_max=&issue_date_from=&issue_date_to=` | Búsqueda con rangos |
+| GET | `/invoices/:id` | Obtener factura con items |
+| PATCH | `/invoices/:id` | Batch update items (cantidad 0 = eliminar) |
+| POST | `/invoices/:id/confirm` | Confirmar pedido (reserva stock) |
+| POST | `/invoices/:id/deliver` | Entregar (descarga stock) |
+| POST | `/invoices/:id/paid` | Marcar como pagado |
+| POST | `/invoices/:id/cancel` | Cancelar (libera stock) |
+
+---
+
+## 🧠 Conceptos aplicados
+
+- Arquitectura en capas
+- Queries SQL puras (sin ORM)
+- Placeholders parametrizados (SQL injection safe)
+- UUID como primary keys
+- Hash de contraseñas con bcrypt
+- Token de verificación con crypto
+- Soft delete con `is_active`
+- Búsquedas dinámicas con whitelist
+- Rangos numéricos y de fechas (`BETWEEN`, `>=`, `<=`)
+- Batch updates (INSERT ... ON DUPLICATE KEY UPDATE)
+- Transacciones SQL (próximo paso)
+- Manejo de errores consistente
+- Documentación con devlog y CHANGELOG
+
+---
+
+## ⚙️ Instalación y ejecución
+
+```bash
+git clone https://github.com/DarioFGonzalez/fullstack-express-mysql-raw.git
+cd fullstack-express-mysql-raw/server
+npm install
+cp .env.example .env
+npm run dev
+```
+
+## 🔒 Mejoras futuras
+
+- JWT y middleware de autenticación
+- Roles y permisos (admin / cliente)
+- Paginación en listados
+- Webhook de pagos (MercadoPago)
+- Dashboard de administración
+- Tests unitarios y de integración
+- Documentación con Swagger
+
+---
+
+## 📊 Progreso actual
+
+| Módulo | Estado |
+|--------|--------|
+| Clients CRUD | ✅ Completado |
+| Products CRUD | ✅ Completado |
+| Invoices (draft + search) | ✅ Completado |
+| Confirm / Deliver / Cancel / Paid | ⏳ Próximo paso |
+| Autenticación JWT | ⏳ Pendiente |
+
+---
+
+## 👨‍💻 Autor
+
+Dario Fernando Gonzalez

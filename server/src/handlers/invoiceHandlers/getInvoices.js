@@ -56,8 +56,6 @@ const getInvoiceById = async (req, res) => {
 const getInvoicesByQuery = async (req, res) => {
     try {
         const { whereClause, values } = invoiceByQueryBuilder(req.query);
-
-        console.log("whereClause: ", whereClause, "\nvalues: ", values);
         
         const [rows] = await req.pool.query(`SELECT * FROM invoices WHERE ${whereClause}`, values);
         return res.status(200).json( rows );

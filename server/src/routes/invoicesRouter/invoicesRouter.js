@@ -12,6 +12,10 @@ invoicesRouter.get('/:id', getInvoiceById);
 
 invoicesRouter.patch('/:id', updateInvoice);
 
-// invoicesRouter.patch('/:id/toggle-active', toggleInvoice);
+// invoicesRouter.post('/:id/confirm', confirmInvoice);
+// invoicesRouter.post('/:id/deliver', deliverInvoice);
+// invoicesRouter.post('/:id/paid', paidInvoice);
+
+// invoicesRouter.post('/:id/cancel', cancelInvoice);
 
 module.exports = invoicesRouter;
