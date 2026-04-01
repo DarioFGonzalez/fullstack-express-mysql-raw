@@ -1,5 +1,61 @@
 # Devlog
 
+## [INVOICES Confirm] 2026-04-01
+
+### Endpoint para confirmar invoice (draft → confirmed)
+
+- Archivo: `src/handlers/invoiceHandlers/confirmInvoice.js`
+- Endpoint: `POST /invoices/:id/confirm`
+- Body: `{ payment_terms, notes }`
+
+### Lógica implementada
+
+1. **Validaciones iniciales**
+   - UUID válido en `:id`
+   - `payment_terms` permitido (30, 60, 90, 120)
+
+2. **Transacción atómica**
+   - `BEGIN TRANSACTION` antes de cualquier modificación
+   - `COMMIT` solo si todo el proceso es exitoso
+   - `ROLLBACK` ante cualquier error
+
+3. **Reserva de stock**
+   - Por cada item en la factura:
+     - Calcula `newReservedStock = reserved_stock + quantity`
+     - Valida que no supere el stock físico disponible
+     - Construye `CASE WHEN id = ? THEN ?` para batch update
+   - Una sola query actualiza `reserved_stock` de todos los productos afectados
+
+4. **Generación de número de factura**
+   - Formato: `INV-YYYYMMDD-RRRR` (ej: `INV-20260401-0470`)
+   - Fecha actual + número aleatorio de 4 dígitos
+   - Sin query extra a la BD
+
+5. **Actualización del invoice**
+   - `status` → `confirmed`
+   - `invoice_number` → generado
+   - `issue_date` → `CURDATE()` (fecha de confirmación)
+   - `due_date` → `DATE_ADD(CURDATE(), INTERVAL payment_terms DAY)`
+   - `payment_terms` → valor recibido
+   - `total` → suma de subtotales de todos los items
+   - `notes` → opcional
+
+6. **Manejo de errores**
+   - `404 INVOICE_NOT_FOUND` → invoice no existe
+   - `409 INSUFFICIENT_STOCK` → stock insuficiente en algún producto
+   - `500 COULDNT_UPDATE_INVOICE` → fallo en el commit final
+
+### Seguridad y buenas prácticas
+- Todos los placeholders con `?` (SQL injection safe)
+- `connection.beginTransaction()` + `commit()` + `rollback()` garantizan atomicidad
+- `connection.release()` en `finally` libera la conexión al pool
+- `affectedRows` verificado después del último `UPDATE`
+
+### Próximos pasos
+- [ ] `POST /invoices/:id/deliver` → descontar stock físico
+- [ ] `POST /invoices/:id/paid` → registrar fecha de pago
+- [ ] `POST /invoices/:id/cancel` → liberar stock reservado
+
 ## [INVOICES Module] 2026-03-31
 
 ### CRUD completo para invoices
