@@ -45,7 +45,30 @@ const validateId = (id) => {
         return true;
 }
 
+const validatePaymentTerms = (payment_terms) => {
+    if(!payment_terms)
+    {
+        throw Object.assign( new Error('Términos de pago no encontrados'),
+        {
+            status: 400,
+            code: "PAYMENT_TERMS_NOT_FOUND",
+            timestamp: new Date().toISOString()
+        })
+    }
+    const allowedPaymentTerms = [ '30', '60', '90', '120' ];
+    if(!allowedPaymentTerms.includes(payment_terms))
+    {
+        throw Object.assign( new Error('Término de pago no válido'),
+        {
+            status: 400,
+            code: 'INVALID_PAYMENT_TERM',
+            timestamp: new Date().toISOString()
+        })
+    }
+    return true;
+}
+
 module.exports = {
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
-    validateId,
+    validateId, validatePaymentTerms,
  };

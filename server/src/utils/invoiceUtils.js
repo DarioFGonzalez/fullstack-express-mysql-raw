@@ -18,6 +18,8 @@ const getInvoiceWithItems = async (pool, id) => {
     products.name AS product_name,
     invoice_items.unit_price AS price_at_addition,
     invoice_items.quantity AS quantity,
+    products.stock AS stock,
+    products.reserved_stock AS reserved_stock,
     invoice_items.subtotal AS subtotal
     FROM invoices
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
@@ -31,4 +33,11 @@ const getInvoiceWithItems = async (pool, id) => {
     return invoice[0];
 }
 
-module.exports = { getInvoiceWithItems };
+const generateInvoiceNumber = () => {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `INV-${date}-${random}`;
+};
+
+module.exports = { getInvoiceWithItems, generateInvoiceNumber };
