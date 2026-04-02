@@ -105,7 +105,7 @@ src/
 |--------|----------|-------------|
 | `POST` | `/invoices` | Crear carrito (`draft`) con primer item |
 | `GET` | `/invoices/all` | Listar todas |
-| `GET` | `/invoices/search?client_id=&status=&total_min=&total_max=&issue_date_from=&issue_date_to=` | Búsqueda con rangos |
+| `GET` | `/invoices/search?client_id=&status=&other_queries` | Búsqueda con rangos |
 | `GET` | `/invoices/:id` | Obtener factura con items |
 | `PATCH` | `/invoices/:id` | Batch update (cantidad `0` = eliminar) |
 | `POST` | `/invoices/:id/confirm` | Confirmar pedido (✅ reserva stock) |
