@@ -8,9 +8,12 @@ const confirmInvoice = async (req, res) => {
     const { payment_terms, notes } = req.body;
     validatePaymentTerms(payment_terms);
 
-    const connection = await req.pool.getConnection();
+    let connection;
 
+    
     try {
+        connection = await req.pool.getConnection();
+        
         await connection.beginTransaction();
 
         const caseConditions = [];
@@ -34,7 +37,12 @@ const confirmInvoice = async (req, res) => {
             }
             else
             {
-                throw Object.assign( new Error(`Sin stock suficiente en product ID: ${invoice_item.product_id}`))
+                throw Object.assign( new Error(`Sin stock suficiente en product ID: ${invoice_item.product_id}`),
+                {
+                    status: 409,
+                    code: "INSUFFICIENT_STOCK",
+                    timestamp: new Date().toISOString()
+                })
             }
         })
 
