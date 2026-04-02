@@ -6,6 +6,7 @@ const { updateInvoice } = require('../../handlers/invoiceHandlers/updateInvoice'
 const confirmInvoice = require('../../handlers/invoiceHandlers/confirmInvoice');
 const deliverInvoice = require('../../handlers/invoiceHandlers/deliverInvoice');
 const payInvoice = require('../../handlers/invoiceHandlers/payInvoice');
+const cancelInvoice = require('../../handlers/invoiceHandlers/cancelInvoice');
 
 invoicesRouter.post('/', postInvoice);
 
@@ -19,6 +20,6 @@ invoicesRouter.post('/:id/confirm', confirmInvoice);
 invoicesRouter.post('/:id/deliver', deliverInvoice);
 invoicesRouter.post('/:id/paid', payInvoice);
 
-// invoicesRouter.post('/:id/cancel', cancelInvoice);
+invoicesRouter.post('/:id/cancel', cancelInvoice);
 
 module.exports = invoicesRouter;

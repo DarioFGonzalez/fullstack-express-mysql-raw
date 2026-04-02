@@ -62,56 +62,56 @@ src/
 ### Manejo de stock profesional
 - `stock` → stock físico real
 - `reserved_stock` → stock reservado en pedidos confirmados
-- Ciclo: draft → confirm (reserva) → deliver (descarga)
+- Ciclo: `draft` → `confirm` (reserva) → `deliver` (descarga)
 
 ### Transacciones SQL
-- Confirmación de pedido: valida stock, reserva, genera número/fechas
-- Entrega: descuenta stock real y libera reserva
-- Cancelación: libera reserva
+- **Confirmación**: valida stock, reserva, genera número/fechas
+- **Entrega**: descuenta stock real y libera reserva
+- **Cancelación**: libera stock reservado
 
 ### Carrito como invoice en draft
 - Un solo invoice por cliente en `draft`
 - Items en `invoice_items`
-- Cantidad 0 = eliminar item
+- Cantidad `0` = eliminar item
 
 ---
 
 ## 📌 Endpoints
 
-### Clientes
+### 👤 Clientes
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/clients` | Registro con token de verificación |
-| GET | `/clients/verify/:token` | Activación de cuenta |
-| GET | `/clients/all` | Listar todos |
-| GET | `/clients/search?business_name=&email=&is_active=` | Búsqueda dinámica |
-| GET | `/clients/:id` | Obtener por ID |
-| PATCH | `/clients/:id` | Actualizar datos |
-| PATCH | `/clients/:id/change-password` | Cambiar contraseña |
-| PATCH | `/clients/:id/toggle-active` | Soft delete |
+| `POST` | `/clients` | Registro con token de verificación |
+| `GET` | `/clients/verify/:token` | Activación de cuenta |
+| `GET` | `/clients/all` | Listar todos |
+| `GET` | `/clients/search?business_name=&email=&is_active=` | Búsqueda dinámica |
+| `GET` | `/clients/:id` | Obtener por ID |
+| `PATCH` | `/clients/:id` | Actualizar datos |
+| `PATCH` | `/clients/:id/change-password` | Cambiar contraseña |
+| `PATCH` | `/clients/:id/toggle-active` | Soft delete |
 
-### Productos
+### 📦 Productos
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/products` | Crear producto |
-| GET | `/products/all` | Listar todos |
-| GET | `/products/search?sku=&name=&category=&is_active=` | Búsqueda dinámica |
-| GET | `/products/:id` | Obtener por ID |
-| PATCH | `/products/:id` | Actualizar |
-| PATCH | `/products/:id/toggle-active` | Soft delete |
+| `POST` | `/products` | Crear producto |
+| `GET` | `/products/all` | Listar todos |
+| `GET` | `/products/search?sku=&name=&category=&is_active=` | Búsqueda dinámica |
+| `GET` | `/products/:id` | Obtener por ID |
+| `PATCH` | `/products/:id` | Actualizar |
+| `PATCH` | `/products/:id/toggle-active` | Soft delete |
 
-### Facturas / Pedidos (Invoices)
+### 🧾 Facturas / Pedidos (Invoices)
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/invoices` | Crear carrito (draft) con primer item |
-| GET | `/invoices/all` | Listar todas |
-| GET | `/invoices/search?client_id=&status=&total_min=&total_max=&issue_date_from=&issue_date_to=` | Búsqueda con rangos |
-| GET | `/invoices/:id` | Obtener factura con items |
-| PATCH | `/invoices/:id` | Batch update items (cantidad 0 = eliminar) |
-| POST | `/invoices/:id/confirm` | Confirmar pedido (reserva stock) |
-| POST | `/invoices/:id/deliver` | Entregar (descarga stock) |
-| POST | `/invoices/:id/paid` | Marcar como pagado |
-| POST | `/invoices/:id/cancel` | Cancelar (libera stock) |
+| `POST` | `/invoices` | Crear carrito (`draft`) con primer item |
+| `GET` | `/invoices/all` | Listar todas |
+| `GET` | `/invoices/search?client_id=&status=&total_min=&total_max=&issue_date_from=&issue_date_to=` | Búsqueda con rangos |
+| `GET` | `/invoices/:id` | Obtener factura con items |
+| `PATCH` | `/invoices/:id` | Batch update (cantidad `0` = eliminar) |
+| `POST` | `/invoices/:id/confirm` | Confirmar pedido (✅ reserva stock) |
+| `POST` | `/invoices/:id/deliver` | Entregar (📦 descarga stock) |
+| `POST` | `/invoices/:id/paid` | Marcar como pagado (💰) |
+| `POST` | `/invoices/:id/cancel` | Cancelar (❌ libera stock) |
 
 ---
 
@@ -126,10 +126,10 @@ src/
 - Soft delete con `is_active`
 - Búsquedas dinámicas con whitelist
 - Rangos numéricos y de fechas (`BETWEEN`, `>=`, `<=`)
-- Batch updates (INSERT ... ON DUPLICATE KEY UPDATE)
-- Transacciones SQL (próximo paso)
+- Batch updates (`INSERT ... ON DUPLICATE KEY UPDATE`)
+- Transacciones SQL (`BEGIN` / `COMMIT` / `ROLLBACK`)
 - Manejo de errores consistente
-- Documentación con devlog y CHANGELOG
+- Documentación con `devlog.md` y `CHANGELOG.md`
 
 ---
 
@@ -162,7 +162,7 @@ npm run dev
 | Clients CRUD | ✅ Completado |
 | Products CRUD | ✅ Completado |
 | Invoices (draft + search) | ✅ Completado |
-| Confirm / Deliver / Cancel / Paid | ⏳ Próximo paso |
+| Confirm / Deliver / Cancel / Paid | ✅ Completado |
 | Autenticación JWT | ⏳ Pendiente |
 
 ---

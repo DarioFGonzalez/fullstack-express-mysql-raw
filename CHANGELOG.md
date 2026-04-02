@@ -1,5 +1,131 @@
 # Changelog
 
+## [Invoices Module] - 2026-04-02
+
+### Schema
+- Created `invoices` and `invoice_items` tables with:
+  - `id CHAR(36) PRIMARY KEY DEFAULT (UUID())` for invoices
+  - `client_id CHAR(36) NOT NULL` (FK to clients)
+  - `status ENUM('draft','confirmed','delivered','paid','cancelled') DEFAULT 'draft'`
+  - `invoice_number VARCHAR(50) UNIQUE NULL` (generated on confirm)
+  - `issue_date DATE NULL` (set on confirm)
+  - `due_date DATE NULL` (calculated as issue_date + payment_terms)
+  - `payment_terms INT NULL` (30, 60, 90, 120)
+  - `total DECIMAL(12,2) NULL` (calculated on confirm)
+  - `paid_at DATETIME NULL` (set on paid)
+  - `delivered_at DATETIME NULL` (set on deliver)
+  - `notes TEXT NULL`
+  - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+  - `updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
+  
+- `invoice_items` uses composite primary key `(invoice_id, product_id)`:
+  - `invoice_id CHAR(36) NOT NULL` (FK to invoices, CASCADE delete)
+  - `product_id CHAR(36) NOT NULL` (FK to products)
+  - `quantity INT NOT NULL`
+  - `unit_price DECIMAL(12,2) NOT NULL` (price at addition)
+  - `subtotal DECIMAL(12,2) NOT NULL`
+  - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### Added
+
+#### Core endpoints
+- **POST /invoices** (`src/handlers/invoiceHandlers/postInvoice.js`)
+  - Creates draft invoice with first item in one call
+  - Validates client_id and product_id (UUID format)
+  - Fetches unit_price from products and calculates subtotal
+  - Returns invoiceId for subsequent operations
+
+- **GET /invoices/all** (`src/handlers/invoiceHandlers/getInvoices.js`)
+  - Returns all invoices with items
+
+- **GET /invoices/search** (`src/handlers/invoiceHandlers/getInvoices.js`)
+  - Dynamic query builder with whitelist validation
+  - Supports exact filters: `client_id`, `status`, `payment_terms`, `invoice_number`
+  - Supports range filters: `total_min`, `total_max`, `issue_date_from`, `issue_date_to`, `due_date_from`, `due_date_to`, `paid_at_from`, `paid_at_to`
+  - Returns 200 with empty array if no results
+
+- **GET /invoices/:id** (`src/handlers/invoiceHandlers/getInvoices.js`)
+  - Returns invoice with its items via JOIN query
+  - 404 if not found
+
+- **PATCH /invoices/:id** (`src/handlers/invoiceHandlers/updateInvoice.js`)
+  - Batch update: insert or update items with quantity > 0
+  - Deletes items with quantity = 0
+  - Uses `ON DUPLICATE KEY UPDATE` for upsert
+  - Validates stock before updating
+
+#### Lifecycle endpoints (with transactions)
+- **POST /invoices/:id/confirm** (`src/handlers/invoiceHandlers/confirmInvoice.js`)
+  - Validates invoice is in `draft` status
+  - Checks stock availability for all items
+  - Generates `invoice_number` (format: `INV-YYYYMMDD-RRRR`)
+  - Calculates `issue_date = CURDATE()` and `due_date = issue_date + payment_terms`
+  - Updates `reserved_stock` in products via `CASE` batch update
+  - Sets status to `confirmed`, stores `total` and `payment_terms`
+  - Uses transaction for atomicity
+
+- **POST /invoices/:id/deliver** (`src/handlers/invoiceHandlers/deliverInvoice.js`)
+  - Validates invoice is `confirmed`
+  - Updates `stock = stock - quantity` and `reserved_stock = reserved_stock - quantity` for each product
+  - Uses `CASE` batch update with transaction
+  - Sets status to `delivered` and `delivered_at = CURRENT_TIMESTAMP`
+
+- **POST /invoices/:id/paid** (`src/handlers/invoiceHandlers/paidInvoice.js`)
+  - Validates invoice is `confirmed` or `delivered`
+  - Sets status to `paid` and `paid_at = CURRENT_TIMESTAMP`
+  - Simple update (no transaction needed)
+
+- **POST /invoices/:id/cancel** (`src/handlers/invoiceHandlers/cancelInvoice.js`)
+  - Validates invoice is `confirmed`
+  - Releases `reserved_stock = reserved_stock - quantity` for each product
+  - Sets status to `cancelled`
+  - Uses transaction for atomicity
+
+### Helpers Added
+- **`src/utils/invoiceUtils.js`** → `getInvoiceWithItems(pool, id)`
+  - Reusable function to fetch invoice with its related products
+  - Used by multiple lifecycle endpoints
+  - Throws `INVOICE_NOT_FOUND` if no invoice exists
+
+- **`src/utils/queryBuilder.js`** → `invoiceByQueryBuilder(queries)`
+  - Builds dynamic WHERE clause for search endpoint
+  - Handles exact matches, `LIKE` (invoice_number), and range filters
+  - Validates enums (`status`, `payment_terms`) against whitelist
+
+### Error Handling
+- `400 INVALID_ID_FORMAT` → invalid UUID
+- `400 MISSING_SEARCH_PARAMETERS` → search without filters
+- `400 INVALID_STATUS` → invalid status value
+- `400 INVALID_PAYMENT_TERMS` → invalid payment_terms value
+- `400 CANNOT_CANCEL_AN_UNCONFIRMED_INVOICE` → cancel non-confirmed invoice
+- `404 INVOICE_NOT_FOUND` → invoice does not exist
+- `409 INSUFFICIENT_STOCK` → insufficient stock on confirm or deliver
+- `409 INCONSISTENT_RESERVED_STOCK` → reserved stock inconsistency
+- `500 COULDNT_UPDATE_INVOICE` → transaction commit failed
+
+### Technical Decisions
+- **Cart as draft invoice**: One active draft per client
+- **No ORM**: Pure SQL queries with parameterized placeholders
+- **Batch updates with CASE**: Update multiple products in single query
+- **Transactions**: `confirm`, `deliver` and `cancel` use `BEGIN/COMMIT/ROLLBACK`
+- **Composite primary key** in `invoice_items`: Prevents duplicates, no separate ID
+- **Frozen price**: `unit_price` captured when adding to cart, not on confirm
+
+### Notes
+- `invoice_number` generated in memory (no extra DB query)
+- Quantity 0 in update → removes item from cart
+- `deliver` and `cancel` require transactions (multiple product updates)
+- `paid` is simple update (only touches invoice)
+- `getInvoiceWithItems` reused across all lifecycle endpoints
+- `connection.release()` always in `finally` block for transaction handlers
+
+### Next Steps
+- [ ] JWT authentication with middleware
+- [ ] Role-based access (admin / client)
+- [ ] Pagination for list endpoints
+- [ ] Demo script or Thunder Client collection
+- [ ] Frontend dashboard (optional)
+
 ## [Products Module] - 2026-03-25
 
 ### Schema

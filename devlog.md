@@ -1,5 +1,68 @@
 # Devlog
 
+## [INVOICES Deliver & Pay & Cancel] 2026-04-02
+
+### Endpoints para ciclo de vida de invoices
+
+Terminé los tres endpoints que faltaban para completar el ciclo completo del invoice:
+
+#### POST /invoices/:id/deliver
+- Archivo: `src/handlers/invoiceHandlers/deliverInvoice.js`
+- Cambia status de `confirmed` a `delivered`
+- Descuenta `stock` y `reserved_stock` de cada producto
+- Setea `delivered_at = CURRENT_TIMESTAMP`
+- Usa transacción con `CASE` para batch update de productos
+
+#### POST /invoices/:id/paid
+- Archivo: `src/handlers/invoiceHandlers/paidInvoice.js`
+- Cambia status a `paid`
+- Setea `paid_at = CURRENT_TIMESTAMP`
+- Valida que el invoice esté en `confirmed` o `delivered`
+- Sin transacción (solo un UPDATE simple)
+
+#### POST /invoices/:id/cancel
+- Archivo: `src/handlers/invoiceHandlers/cancelInvoice.js`
+- Solo permite cancelar si status es `confirmed`
+- Libera `reserved_stock` (resta la cantidad reservada)
+- Cambia status a `cancelled`
+- Usa transacción para liberar stock atómicamente
+
+### Lógica compartida
+- Todos usan `getInvoiceWithItems` para traer el invoice con sus productos
+- Los que modifican stock usan `CASE WHEN id = ? THEN ?` para batch update
+- Todos tienen `validateId` al inicio
+- Manejo de errores consistente con código y timestamp
+
+### Manejo de errores
+- `400 INVOICE_NOT_CONFIRMED` → intentar entregar algo que no está confirmado
+- `400 CANNOT_CANCEL_AN_UNCONFIRMED_INVOICE` → cancelar algo que no está confirmado
+- `400 INVOICE_NOT_DELIVERED` → pagar algo que no fue entregado (o confirmado)
+- `409 INSUFFICIENT_STOCK` → stock insuficiente al entregar
+- `409 INCONSISTENT_RESERVED_STOCK` → stock reservado inconsistente al cancelar
+- `500 COULDNT_UPDATE_INVOICE` → fallo en el commit final
+
+### Notas
+- `deliver` y `cancel` usan transacción porque modifican múltiples productos
+- `paid` es simple porque solo toca el invoice
+- Todos los placeholders con `?` (SQL injection safe)
+- `connection.release()` en `finally` libera la conexión al pool
+
+### Estado actual del módulo invoices
+
+| Endpoint | Estado |
+|----------|--------|
+| POST `/invoices` | ✅ |
+| GET `/invoices/all` | ✅ |
+| GET `/invoices/search` | ✅ |
+| GET `/invoices/:id` | ✅ |
+| PATCH `/invoices/:id` | ✅ |
+| POST `/invoices/:id/confirm` | ✅ |
+| POST `/invoices/:id/deliver` | ✅ |
+| POST `/invoices/:id/paid` | ✅ |
+| POST `/invoices/:id/cancel` | ✅ |
+
+**Módulo de invoices completado.** Ahora toca JWT y middlewares de autenticación.
+
 ## [INVOICES Confirm] 2026-04-01
 
 ### Endpoint para confirmar invoice (draft → confirmed)
