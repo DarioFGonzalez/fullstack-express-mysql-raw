@@ -29,6 +29,7 @@ const confirmInvoice = async (req, res) => {
             if(newReservedStock <= invoice_item.stock)
             {
                 caseConditions.push('WHEN id = ? THEN  ?');
+                
                 values.push(invoice_item.product_id, newReservedStock);
                 ids.push(invoice_item.product_id);
 
