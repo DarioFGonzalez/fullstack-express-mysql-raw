@@ -68,7 +68,49 @@ const validatePaymentTerms = (payment_terms) => {
     return true;
 }
 
+const validateEmail = (email) => {
+    if(!email) {
+        throw Object.assign( new Error('Email no recibido'),
+        {
+            status: 400,
+            code: 'MISSING_EMAIL',
+            timestamp: new Date().toISOString()
+        })
+    }
+    if(!emailRegex.test(email)) {
+        throw Object.assign( new Error('Formato de email inválido'),
+        {
+            status: 400,
+            code: 'INVALID_EMAIL_FORMAT',
+            timestamp: new Date().toISOString()
+        })
+    };
+
+    return true;
+}
+
+const validatePassword = (pass) => {
+    if(!pass) {
+        throw Object.assign( new Error('Password no recibido'),
+        {
+            status: 400,
+            code: 'MISSING_PASSWORD',
+            timestamp: new Date().toISOString()
+        })
+    }
+    if(!passwordRegex.test(password)) {
+        throw Object.assign( new Error('Formato de contraseña inválido'),
+        {
+            status: 400,
+            code: 'INVALID_PASSWORD_FORMAT',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    return true;
+}
+
 module.exports = {
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
-    validateId, validatePaymentTerms,
+    validateId, validateEmail, validatePassword, validatePaymentTerms,
  };
