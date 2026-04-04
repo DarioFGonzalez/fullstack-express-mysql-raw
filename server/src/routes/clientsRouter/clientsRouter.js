@@ -5,8 +5,10 @@ const { getAllClients, getClientById, getClientsByQuery } = require('../../handl
 const { updateClient, updatePassword, toggleClient } = require('../../handlers/clientHandlers/updateClients');
 const loginClient = require('../../handlers/clientHandlers/loginClient');
 const verifyClient = require('../../handlers/clientHandlers/verifyClient');
+const authMiddleware = require('../../middlewares/auth');
+const adminOnly = require('../../middlewares/adminOnly');
 
-clientsRouter.post('/', postClient);
+clientsRouter.post('/', authMiddleware, adminOnly, postClient);
 
 clientsRouter.get('/verify/:verification_token', verifyClient);
 
