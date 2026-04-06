@@ -3,6 +3,8 @@ const emailRegex = /^[^\s@]{3,}@([^\s@]+\.)+[^\s@]{2,}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 const tokenRegex = /^[0-9a-f]{64}$/i;
 
+const selectedFields = 'id, business_name, tax_id, email, phone, address, contact_name, contact_phone, created_at, updated_at, last_login, status, is_admin, email_verified_at';
+
 const isValidUUID = (uuid) => {
     if(!uuid || typeof uuid !== 'string') return false;
     return uuidRegex.test(uuid);
@@ -43,6 +45,27 @@ const validateId = (id) => {
             })
         }
         return true;
+}
+
+const validateToken = (token) => {
+    if(!token) {
+        throw Object.assign( new Error('Falta el token'),
+        {
+            status: 400,
+            code: 'MISSING_VERIFICATION_TOKEN',
+            timestamp: new Date().toISOString()
+        })
+    }
+    if(isValidToken(token)) {
+        return true;
+    }
+
+    throw Object.assign( new Error ('Formato del token no válido'),
+    {
+        status: 400,
+        code: 'INVALID_TOKEN_FORMAT',
+        timestamp: new Date().toISOString()
+    } );    
 }
 
 const validatePaymentTerms = (payment_terms) => {
@@ -89,8 +112,8 @@ const validateEmail = (email) => {
     return true;
 }
 
-const validatePassword = (pass) => {
-    if(!pass) {
+const validatePassword = (password) => {
+    if(!password) {
         throw Object.assign( new Error('Password no recibido'),
         {
             status: 400,
@@ -111,6 +134,8 @@ const validatePassword = (pass) => {
 }
 
 module.exports = {
+    selectedFields,
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
-    validateId, validateEmail, validatePassword, validatePaymentTerms,
+    validateId, validateEmail, validatePassword, validateToken,
+    validatePaymentTerms,
  };

@@ -1,10 +1,9 @@
 const validation = require('../../utils/validations');
 const { queryBuilder } = require('../../utils/queryBuilder');
-const selectedFields = 'id, is_active, business_name, tax_id, email, phone, address, contact_name, contact_phone, created_at, updated_at, last_login, verified_at';
 
 const getAllClients = async (req, res) => {
     try {
-        const [rows] = await req.pool.query(`SELECT ${selectedFields} FROM clients`);
+        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients`);
 
         return res.status(200).json(rows);
     }
@@ -20,7 +19,7 @@ const getClientsByQuery = async (req, res) => {
 
         const whereCondition = conditions.join(' AND ');
         
-        const [rows] = await req.pool.query(`SELECT ${selectedFields} FROM clients WHERE ${whereCondition}`, [values]);
+        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${whereCondition}`, [values]);
         return res.status(200).json( rows );
     }
     catch(error) {
@@ -35,7 +34,7 @@ const getClientById = async (req, res) => {
 
         validation.validateId(id);
 
-        const [rows] = await req.pool.query(`SELECT ${selectedFields} FROM clients WHERE id = ?`, [id]);
+        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [id]);
         if(rows.length===0)
         {
             throw Object.assign(

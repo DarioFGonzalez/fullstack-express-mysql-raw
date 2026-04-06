@@ -1,11 +1,11 @@
-const { isValidUUID, isValidPassword } = require('../../utils/validations');
-const queryBuilder = require('../../utils/queryBuilder');
+const validation = require('../../utils/validations');
+const { updateQueryBuilder } = require('../../utils/queryBuilder');
 const bcrypt = require('bcrypt');
 
-const updateClient = async(req, res) =>
+const updateMyProfile = async (req, res) =>
 {
     try {
-        const { conditions, values } = queryBuilder(req.body);
+        const { conditions, values } = updateQueryBuilder(req.body);
 
         if(conditions.length===0)
         {
@@ -17,17 +17,10 @@ const updateClient = async(req, res) =>
             })
         }
 
-        if(!isValidUUID(req.params.id))
-        {
-            throw Object.assign( new Error('ID Inválido',
-                {
-                    status: 400,
-                    code: "INVALID_ID_FORMAT",
-                    timestamp: new Date().toISOString()
-                } ) );
-        }
+        validation.validateId(req.client.id);
 
-        values.push(req.params.id);
+        values.push(req.client.id);
+        
         const query = `UPDATE clients SET ${conditions.join(', ')} WHERE id = ?`;
 
         const [result] = await req.pool.query( query, values );
@@ -42,8 +35,7 @@ const updateClient = async(req, res) =>
             } );
         }
 
-        const selectedFields = 'id, is_active, business_name, tax_id, email, phone, address, contact_name, contact_phone, created_at, updated_at, last_login, verified_at';
-        const [rows] = await req.pool.query( `SELECT ${selectedFields} FROM clients WHERE id = ?`, [req.params.id] );
+        const [rows] = await req.pool.query( `SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [req.params.id] );
 
         return res.status(200).json(rows[0]);
     } catch(error) {
@@ -52,10 +44,10 @@ const updateClient = async(req, res) =>
     }
 }
 
-const updatePassword = async (req, res) =>
+const changeMyPassword = async (req, res) =>
 {
     try {
-        const { id } = req.params;
+        const { id } = req.client;
         const {password, newPassword} = req.body;
 
         if(!password || !newPassword)
@@ -68,7 +60,7 @@ const updatePassword = async (req, res) =>
             })
         }
 
-        if(!isValidPassword(newPassword))
+        if(!validation.isValidPassword(newPassword))
         {
             throw Object.assign( new Error('Formato de la nueva contraseña inválido'),
             {
@@ -135,30 +127,24 @@ const updatePassword = async (req, res) =>
     }
 }
 
-const toggleClient = async (req, res) =>
+const deactivateMySelf = async (req, res) =>
 {
     try {
-        const { id } = req.params;
-        if(!id)
-        {
-            throw Object.assign( new Error('Se necesita recibir un ID'),
-            {
-                status: 400,
-                code: "NO_ID_RECIEVED",
-                timestamp: new Date().toISOString()
-            })
-        }
-        if(!isValidUUID(id))
-        {
-            throw Object.assign( new Error('ID recibido con formato inválido'),
-            {
-                status: 400,
-                code: "INVALID_ID_FORMAT",
-                timestamp: new Date().toISOString()
-            })
-        }
+        const {id} = req.client;
+        validation.validateId(id);
 
-        const [result] = await req.pool.query( 'UPDATE clients SET is_active = NOT is_active WHERE id = ?', [id] );
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        const deactivationQuery =
+        `UPDATE clients
+        SET
+            status = "inactive",
+            verification_token = ?
+        WHERE id = ?`;
+
+        const values = [ verificationToken, id ];
+
+        const [result] = await req.pool.query( deactivationQuery, values );
 
         if(result.affectedRows===0)
         {
@@ -170,11 +156,11 @@ const toggleClient = async (req, res) =>
             })
         }
 
-        res.status(200).json( { message: 'Estado del cliente actualizado'} );
+        res.status(200).json( { message: 'Estado del cliente actualizado' } );
         } catch(error) {
-        console.error( 'Error en toggleClient:', error );
+        console.error( 'Error desactivando cliente:', error.code || error );
         return res.status(error.status||500).json( {error: error.message||error} );
     }
 }
 
-module.exports = { updateClient, updatePassword, toggleClient };
+module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf };

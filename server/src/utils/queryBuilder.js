@@ -1,7 +1,23 @@
 const { isValidUUID } = require("./validations");
 
 const queryBuilder = (queries) => {
-    const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name'];
+    const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email"];
+
+    const conditions = [];
+    const values = [];
+
+    for( const [key, value] of Object.entries(queries) ) {
+        if(allowedColumns.includes(key)) {
+            conditions.push(`${key} = ?`);
+            values.push(value);
+        }
+    }
+
+    return { conditions, values };
+}
+
+const updateQueryBuilder = (queries) => {
+    const allowedColumns = [ 'phone', 'address', 'contact_name', 'contact_phone' ];
 
     const conditions = [];
     const values = [];
@@ -241,6 +257,7 @@ const invoiceByQueryBuilder =(queries) =>
     return { whereClause, values };
 }
 
-module.exports = { queryBuilder,
+module.exports = {
+    queryBuilder, updateQueryBuilder,
     productQueryBuilder, searchProductByQuery, updateProductQuery,
     invoiceByQueryBuilder };
