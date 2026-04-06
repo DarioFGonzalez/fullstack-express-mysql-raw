@@ -1,5 +1,66 @@
 # Devlog
 
+## [CLIENT Self-Service] 2026-04-06
+
+### Endpoints para que el cliente maneje su cuenta solo
+
+Terminé el módulo de autogestión de clientes. Ahora pueden ver y actualizar su perfil, cambiar contraseña, ver sus facturas y manejar su estado (activar/desactivar cuenta).
+
+#### Estructura de rutas (cliente autenticado)
+
+| Método | Endpoint | Qué hace |
+|--------|----------|----------|
+| GET | `/me` | Ver mi perfil |
+| PATCH | `/me` | Actualizar mi perfil (phone, address, contact_name, contact_phone) |
+| PATCH | `/me/change-password` | Cambiar contraseña |
+| GET | `/me/invoices` | Ver todas mis facturas |
+| GET | `/me/invoices/active` | Ver mi carrito activo (draft) |
+| PATCH | `/me/deactivate` | Desactivar mi cuenta |
+| POST | `/me/reactivate` | Solicitar reactivación (envía email) |
+| PATCH | `/me/reactivate/:token` | Reactivar cuenta con token |
+
+#### Flujo de desactivación/reactivación
+
+1. El cliente desactiva su cuenta → `status = 'inactive'`, se genera un `verification_token`
+2. Solicita reactivación → se envía un email con un link que contiene el token
+3. Clickea el link → frontend llama al endpoint de reactivación
+4. El token se valida y la cuenta vuelve a `status = 'active'`
+
+#### Estados de la cuenta
+
+| Estado | Qué significa |
+|--------|---------------|
+| `pending` | Registró pero no verificó email |
+| `confirmed` | Verificó email, espera aprobación de admin |
+| `active` | Cuenta habilitada para operar |
+| `inactive` | Desactivada por el cliente, puede reactivarse por email |
+
+#### Login simplificado
+
+- Ya no devuelve datos del cliente, solo el token
+- El frontend usa `/me` para obtener el perfil después de loguear
+- Separa responsabilidades: login solo autentica, `/me` da la info
+
+#### Archivos involucrados
+
+- `src/handlers/clientHandlers/getMyData.js` → getMyProfile, getMyInvoices, getMyActiveInvoice
+- `src/handlers/clientHandlers/updateMyProfile.js` → updateMyProfile
+- `src/handlers/clientHandlers/changeMyPassword.js` → changeMyPassword (antes updatePassword, ahora usa req.client.id)
+- `src/handlers/clientHandlers/deactivateMySelf.js` → desactivar cuenta
+- `src/handlers/clientHandlers/reactivateAccount.js` → verifyMail, sendReactivationMail, reactivateMyAccount
+
+### Cambios en la base de datos
+
+- Modificado `status` ENUM: ahora acepta `'pending'`, `'confirmed'`, `'active'`, `'inactive'`
+- `verification_token` se reutiliza para reactivación
+- `email_verified_at` se setea cuando confirma el email
+
+### Próximos pasos
+
+- [ ] Separar `clientsRouter` en `clientRoutes.js` y `adminRoutes.js`
+- [ ] Proteger rutas de admin con `authMiddleware + adminOnly`
+- [ ] Implementar Nodemailer para envío real de emails
+
 ## [INVOICES Deliver & Pay & Cancel] 2026-04-02
 
 ### Endpoints para ciclo de vida de invoices
