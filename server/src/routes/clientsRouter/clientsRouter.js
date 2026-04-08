@@ -11,7 +11,6 @@ const { getMyProfile, getMyInvoices, getMyActiveInvoice } = require('../../handl
 
 //CLIENT Router
 clientsRouter.post('/', postClient);
-
 clientsRouter.get('/me/verify/:verification_token', verifyMail);
 
 clientsRouter.post('/login', loginClient);
@@ -30,11 +29,12 @@ clientsRouter.post('/me/reactivate', sendReactivationMail);
 clientsRouter.patch('/me/reactivate/:verification_token', reactivateMyAccount)
 
 //ADMIN Router
+clientsRouter.use(adminOnly);
+
 clientsRouter.get('/all', getAllClients);
 clientsRouter.get('/search', getClientsByQuery);
 clientsRouter.get('/:id', getClientById);
 
-
-clientsRouter.patch('/:id/toggle-active', toggleClient);
+clientsRouter.patch('/:id/deactivate', toggle);
 
 module.exports = clientsRouter;

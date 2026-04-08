@@ -163,4 +163,48 @@ const deactivateMySelf = async (req, res) =>
     }
 }
 
+const toggleClient = async (req, res) =>
+{
+    try {
+        const {id} = req.params;
+        validation.validateId(id);
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const [actualStatus] = await req.pool.query('SELECT status FROM clients WHERE id = ?', [id]);
+        if(actualStatus.length===0) {
+            throw Object.assign( new Error('Cliente no encontrado'),
+            {
+                status: 404,
+                code: 'CLIENT_NOT_FOUND',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const {status} = actualStatus[0];
+
+        const deactivationQuery =
+        `UPDATE clients
+        SET
+            status = ${status==='inactive'?'active':'inactive'},
+        WHERE id = ?`;
+
+        const [result] = await req.pool.query( deactivationQuery, [id] );
+
+        if(result.affectedRows===0)
+        {
+            throw Object.assign( new Error('Cliente no encontrado'),
+            {
+                status: 404,
+                code: 'CLIENT_NOT_FOUND',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        res.status(200).json( { message: 'Estado del cliente actualizado' } );
+        } catch(error) {
+        console.error( 'Error desactivando cliente:', error.code || error );
+        return res.status(error.status||500).json( {error: error.message||error} );
+    }
+}
+
 module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf };
