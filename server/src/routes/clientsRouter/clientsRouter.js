@@ -9,12 +9,13 @@ const authMiddleware = require('../../middlewares/auth');
 const adminOnly = require('../../middlewares/adminOnly');
 const { getMyProfile, getMyInvoices, getMyActiveInvoice, } = require('../../handlers/clientHandlers/getMyData');
 
-//CLIENT Router
+//Public routes
 clientsRouter.post('/', postClient);
 clientsRouter.get('/me/verify/:verification_token', verifyMail);
 
 clientsRouter.post('/login', loginClient);
 
+//Client routes
 clientsRouter.use(authMiddleware);
 
 clientsRouter.get('/me', getMyProfile);
@@ -28,7 +29,7 @@ clientsRouter.patch('/me/deactivate', deactivateMySelf);
 clientsRouter.post('/me/reactivate', sendReactivationMail);
 clientsRouter.patch('/me/reactivate/:verification_token', reactivateMyAccount)
 
-//ADMIN Router
+//Admin routes
 clientsRouter.use(adminOnly);
 
 clientsRouter.get('/all', getAllClients);

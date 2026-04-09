@@ -8,18 +8,19 @@ const deliverInvoice = require('../../handlers/invoiceHandlers/deliverInvoice');
 const payInvoice = require('../../handlers/invoiceHandlers/payInvoice');
 const cancelInvoice = require('../../handlers/invoiceHandlers/cancelInvoice');
 
+//Client routes
 invoicesRouter.post('/', postInvoice);
+invoicesRouter.get('/:id', getInvoiceById);
+invoicesRouter.patch('/:id', updateInvoice);
+invoicesRouter.post('/:id/confirm', confirmInvoice);
+invoicesRouter.post('/:id/cancel', cancelInvoice);
 
+//Admin routes
 invoicesRouter.get('/all', getAllInvoices);
 invoicesRouter.get('/search', getInvoicesByQuery);
-invoicesRouter.get('/:id', getInvoiceById);
-
-invoicesRouter.patch('/:id', updateInvoice);
-
-invoicesRouter.post('/:id/confirm', confirmInvoice);
 invoicesRouter.post('/:id/deliver', deliverInvoice);
-invoicesRouter.post('/:id/paid', payInvoice);
 
-invoicesRouter.post('/:id/cancel', cancelInvoice);
+//Webhook
+invoicesRouter.post('/:id/paid', payInvoice);
 
 module.exports = invoicesRouter;

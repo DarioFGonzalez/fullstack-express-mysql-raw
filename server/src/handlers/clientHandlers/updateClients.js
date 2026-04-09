@@ -197,7 +197,7 @@ const toggleClient = async (req, res) =>
 
         const statusList = {
             active: `"inactive", verification_token = ?`,
-            confirmed: `"active", verifcation_token = NULL`,
+            confirmed: `"active", verification_token = NULL`,
             inactive: `"active", verification_token = NULL`
         }
 
