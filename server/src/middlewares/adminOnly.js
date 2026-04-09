@@ -1,14 +1,26 @@
 const adminOnly = (req, res, next) => {
-    if(!req.user?.is_admin) {
-        throw Object.assign( new Error('No autorizado'),
-        {
-            status: 403,
-            code: 'UNAUTHORIZED',
-            timestamp: new Date().toISOString()
-        })
-    }
+    try {
+        if(!req.client?.is_admin) {
+            throw Object.assign( new Error('No autorizado'),
+            {
+                status: 403,
+                code: 'UNAUTHORIZED',
+                timestamp: new Date().toISOString()
+            })
+        }
 
-    next();
+        next();
+    } catch(error) {
+        console.error("Error en el middleware de autenticación para administradores:", error.code||error);
+        if(error.name==='JsonWebTokenError') {
+            return res.status(401).json({ error: 'Token inválido' });
+        }
+        if(error.name==='TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expirado' });
+        }
+
+        return res.status(401).json({ error: 'No autorizado' });
+    }
 }
 
 module.exports = adminOnly;

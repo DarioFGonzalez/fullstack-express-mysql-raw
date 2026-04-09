@@ -1,6 +1,7 @@
 const validation = require('../../utils/validations');
 const { updateQueryBuilder } = require('../../utils/queryBuilder');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const updateMyProfile = async (req, res) =>
 {
@@ -132,6 +133,14 @@ const deactivateMySelf = async (req, res) =>
     try {
         const {id} = req.client;
         validation.validateId(id);
+        if(req.client.status!=='active') {
+            throw Object.assign( new Error('El cliente no está activo'),
+            {
+                status: 403,
+                code: 'FORBIDDEN_ACCOUNT_NOT_ACTIVE',
+                timestamp: new Date().toISOString()
+            })
+        }
 
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
@@ -169,7 +178,6 @@ const toggleClient = async (req, res) =>
         const {id} = req.params;
         validation.validateId(id);
 
-        const verificationToken = crypto.randomBytes(32).toString('hex');
         const [actualStatus] = await req.pool.query('SELECT status FROM clients WHERE id = ?', [id]);
         if(actualStatus.length===0) {
             throw Object.assign( new Error('Cliente no encontrado'),
@@ -182,13 +190,37 @@ const toggleClient = async (req, res) =>
 
         const {status} = actualStatus[0];
 
-        const deactivationQuery =
+        let values = [ id ];
+        if(status==='active') {
+            values.unshift(crypto.randomBytes(32).toString('hex'));
+        }
+
+        const statusList = {
+            active: `"inactive", verification_token = ?`,
+            confirmed: `"active", verifcation_token = NULL`,
+            inactive: `"active", verification_token = NULL`
+        }
+
+        console.log("status: ", status, "\nstatusList[status]: ", statusList[status]);
+
+        if(!statusList[status]) {
+            throw Object.assign( new Error('Status actual no intercambiable'),
+            {
+                status: 400,
+                code: "INVALID_ACTUAL_STATUS",
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const toggleQuery =
         `UPDATE clients
         SET
-            status = ${status==='inactive'?'active':'inactive'},
+            status = ${statusList[status]}
         WHERE id = ?`;
 
-        const [result] = await req.pool.query( deactivationQuery, [id] );
+        console.log("toggleQuery: ", toggleQuery);
+
+        const [result] = await req.pool.query( toggleQuery, values );
 
         if(result.affectedRows===0)
         {
@@ -202,9 +234,9 @@ const toggleClient = async (req, res) =>
 
         res.status(200).json( { message: 'Estado del cliente actualizado' } );
         } catch(error) {
-        console.error( 'Error desactivando cliente:', error.code || error );
+        console.error( 'Error cambiando el estado del cliente:', error.code || error );
         return res.status(error.status||500).json( {error: error.message||error} );
     }
 }
 
-module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf };
+module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf, toggleClient };

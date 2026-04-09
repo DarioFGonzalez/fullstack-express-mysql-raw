@@ -4,11 +4,11 @@ const jwt = require('jsonwebtoken');
 
 const loginClient = async (req, res) => {
     const {email, password} = req.body;
-    validateEmail(email);
-    validatePassword(password);
-
+    
     try {
-        const fields = 'id, is_admin, status';
+        validateEmail(email);
+        validatePassword(password);
+        const fields = 'id, is_admin, password';
 
         const [client] = await req.pool.query(`SELECT ${fields} FROM clients WHERE email = ?`, [ email ]);
         if(client.length===0) {
@@ -29,6 +29,8 @@ const loginClient = async (req, res) => {
                 timestamp: new Date().toISOString()
             })
         }
+        
+        delete client[0].password;
 
         const token = jwt.sign( client[0], process.env.JWT_SECRET, {expiresIn: '7d'} );
         return res.status(200).json( { token } );

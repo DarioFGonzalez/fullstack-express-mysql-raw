@@ -63,6 +63,15 @@ const reactivateMyAccount = async (req, res) => {
         const { verification_token } = req.params;
         validation.validateToken(verification_token);
 
+        if(req.client.status!=='inactive') {
+            throw Object.assign( new Error('El cliente no está inactivo'),
+            {
+                status: 403,
+                code: 'FORBIDDEN_ACCOUNT_ACTIVE',
+                timestamp: new Date().toISOString()
+            })
+        }
+
         const verificationQuery =
         `UPDATE clients
         SET

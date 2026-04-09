@@ -1,4 +1,6 @@
-const authMiddleware = (req, res, next) => {
+const jwt = require('jsonwebtoken');
+
+const authMiddleware = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if(!authHeader) {
@@ -21,6 +23,9 @@ const authMiddleware = (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const [status] = await req.pool.query('SELECT status FROM clients WHERE id = ?', [decoded.id]);
+
+        decoded.status = status[0].status;
 
         req.client = decoded;
         next();
@@ -33,7 +38,7 @@ const authMiddleware = (req, res, next) => {
             return res.status(401).json({ error: 'Token expirado' });
         }
 
-        return res.status(401).json({ error: 'No autorizado' });
+        return res.status(error.status||500).json({ error: error.message || 'No autorizado' });
     }
 }
 

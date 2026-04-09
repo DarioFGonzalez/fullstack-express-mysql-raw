@@ -1,7 +1,7 @@
 const { isValidUUID } = require("./validations");
 
 const queryBuilder = (queries) => {
-    const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email"];
+    const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id"];
 
     const conditions = [];
     const values = [];

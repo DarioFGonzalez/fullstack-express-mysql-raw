@@ -2,12 +2,12 @@ const {Router} = require('express');
 const clientsRouter = Router();
 const postClient = require('../../handlers/clientHandlers/postClient');
 const { getAllClients, getClientById, getClientsByQuery } = require('../../handlers/clientHandlers/getClients');
-const { changeMyPassword, updateMyProfile, deactivateMySelf } = require('../../handlers/clientHandlers/updateClients');
+const { changeMyPassword, updateMyProfile, deactivateMySelf, toggleClient } = require('../../handlers/clientHandlers/updateClients');
 const loginClient = require('../../handlers/clientHandlers/loginClient');
 const {verifyMail, sendReactivationMail, reactivateMyAccount} = require('../../handlers/clientHandlers/verifyClient');
 const authMiddleware = require('../../middlewares/auth');
 const adminOnly = require('../../middlewares/adminOnly');
-const { getMyProfile, getMyInvoices, getMyActiveInvoice } = require('../../handlers/clientHandlers/getMyData');
+const { getMyProfile, getMyInvoices, getMyActiveInvoice, } = require('../../handlers/clientHandlers/getMyData');
 
 //CLIENT Router
 clientsRouter.post('/', postClient);
@@ -33,8 +33,8 @@ clientsRouter.use(adminOnly);
 
 clientsRouter.get('/all', getAllClients);
 clientsRouter.get('/search', getClientsByQuery);
-clientsRouter.get('/:id', getClientById);
+clientsRouter.patch('/:id/toggle', toggleClient);
 
-clientsRouter.patch('/:id/deactivate', toggle);
+clientsRouter.get('/:id', getClientById);
 
 module.exports = clientsRouter;
