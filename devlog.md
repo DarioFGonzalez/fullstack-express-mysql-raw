@@ -1,5 +1,55 @@
 # Devlog
 
+## [Clients Router Final] 2026-04-09
+
+### Separación definitiva de rutas públicas, de cliente autenticado y de admin
+
+Terminé de organizar el enrutador de clients. Quedó todo prolijo, con los middlewares bien puestos y cada endpoint en su lugar.
+
+#### Cómo quedó la estructura
+
+- **Rutas públicas** (sin autenticar):
+  - `POST /` → registro
+  - `GET /me/verify/:token` → verificación de email
+  - `POST /login` → login (devuelve solo el token)
+
+- **Rutas de cliente autenticado** (requieren `authMiddleware`):
+  - `GET /me` → perfil
+  - `PATCH /me` → actualizar datos no sensibles
+  - `PATCH /me/change-password` → cambiar contraseña
+  - `GET /me/invoices` → listar facturas propias
+  - `GET /me/invoices/active` → ver carrito activo
+  - `PATCH /me/deactivate` → desactivar cuenta
+  - `POST /me/reactivate` → pedir reactivación por email
+  - `PATCH /me/reactivate/:token` → reactivar con token
+
+- **Rutas de admin** (requieren `authMiddleware` + `adminOnly`):
+  - `GET /all` → listar todos los clientes
+  - `GET /search` → búsqueda dinámica
+  - `PATCH /:id/toggle` → cambiar estado (active/inactive/confirmed)
+  - `GET /:id` → obtener cliente por ID
+
+#### Manejo de estado y token
+
+- El `status` ya no se guarda en el JWT. Se consulta en cada request desde la DB.
+- El middleware de autenticación valida el token y después busca el estado actual del cliente.
+
+#### Middlewares funcionando
+
+- `authMiddleware`: verifica token, busca el status en DB y arma `req.client`
+- `adminOnly`: verifica `req.client.is_admin` y rechaza con 403 si no lo es
+
+#### Errores corregidos en el camino
+
+- El middleware `adminOnly` no estaba capturando bien los errores y devolvía HTML en vez de JSON. Se encapsuló con try/catch y ahora responde como corresponde.
+- El orden de las rutas estaba haciendo que `/:id` se comiera otras rutas como `/all` o `/search`. Se reordenaron y ahora funciona todo.
+
+#### Próximos pasos
+
+- Pasar por el mismo proceso de seguridad a los routers de products e invoices
+- Probar bien edge cases y errores
+- Desplegar el backend y grabar una demo
+
 ## [CLIENT Self-Service] 2026-04-06
 
 ### Endpoints para que el cliente maneje su cuenta solo
