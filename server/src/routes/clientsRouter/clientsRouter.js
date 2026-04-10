@@ -7,7 +7,7 @@ const loginClient = require('../../handlers/clientHandlers/loginClient');
 const {verifyMail, sendReactivationMail, reactivateMyAccount} = require('../../handlers/clientHandlers/verifyClient');
 const authMiddleware = require('../../middlewares/auth');
 const {adminOnly} = require('../../middlewares/adminOnly');
-const { getMyProfile, getMyInvoices, getMyActiveInvoice, getThisInvoice, } = require('../../handlers/clientHandlers/getMyData');
+const getMyProfile = require('../../handlers/clientHandlers/getMyData');
 
 //Public routes
 clientsRouter.post('/', postClient);
@@ -19,10 +19,6 @@ clientsRouter.post('/login', loginClient);
 clientsRouter.use(authMiddleware);
 
 clientsRouter.get('/me', getMyProfile);
-clientsRouter.get('/me/invoices', getMyInvoices);
-clientsRouter.get('/me/invoices/:invoiceId', getThisInvoice);
-clientsRouter.get('/me/invoices/active', getMyActiveInvoice);
-
 clientsRouter.patch('/me', updateMyProfile);
 clientsRouter.patch('/me/change-password', changeMyPassword);
 

@@ -9,6 +9,7 @@ const payInvoice = require('../../handlers/invoiceHandlers/payInvoice');
 const cancelInvoice = require('../../handlers/invoiceHandlers/cancelInvoice');
 const authMiddleware = require('../../middlewares/auth');
 const { activeClientOnly, adminOnly } = require('../../middlewares/adminOnly');
+const { getMyInvoices, getThisInvoice, getMyActiveInvoice } = require('../../handlers/invoiceHandlers/getMyInvoices');
 
 //Client routes
 invoicesRouter.use(authMiddleware);
@@ -17,8 +18,14 @@ invoicesRouter.use(authMiddleware);
 invoicesRouter.use(activeClientOnly);
 
 invoicesRouter.post('/', postInvoice);
+
+invoicesRouter.get('/me', getMyInvoices);
+invoicesRouter.get('/me/:invoiceId', getThisInvoice);
+invoicesRouter.get('/me/active', getMyActiveInvoice);
+
 invoicesRouter.patch('/:id', updateInvoice);
 invoicesRouter.post('/:id/confirm', confirmInvoice);
+
 invoicesRouter.post('/:id/cancel', cancelInvoice);
 
 //Admin routes
