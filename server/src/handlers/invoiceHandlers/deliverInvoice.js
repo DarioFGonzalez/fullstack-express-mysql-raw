@@ -90,11 +90,11 @@ const deliverInvoice = async (req, res) => {
 
         return res.status(200).json( {message: 'Invoice entregado', invoice_id: id } );
     } catch(error) {
-        await connection.rollback();
+        if(connection) await connection.rollback();
         console.error( "Error entregando invoice:", error.code || error );
         return res.status(error.status||500).json( {error: error.message || error} );
     } finally {
-        connection.release();
+        if(connection) connection.release();
     }    
 }
 

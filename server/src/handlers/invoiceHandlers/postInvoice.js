@@ -1,8 +1,15 @@
 const validations = require('../../utils/validations');
 
 const postInvoice = async (req, res) => {
+    let connection;
+
     try {
-        const { clientId, productId, quantity } = req.body;
+        connection = await req.pool.getConnection();
+
+        await connection.beginTransaction();
+
+        const { productId, quantity } = req.body;
+        const { id } = req.client;
 
         if(quantity<=0)
         {
@@ -14,12 +21,22 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        validations.validateId(clientId);
         validations.validateId(productId);
 
-        await req.pool.query('INSERT INTO invoices (client_id) VALUES (?)', [clientId]);
-        const [invoiceId] = await req.pool.query("SELECT id FROM invoices WHERE client_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 1", [ clientId ]);
-        if(invoiceId.length===0)
+        const [existingDraft] = await connection.query(`SELECT id FROM invoices WHERE client_id = ? AND status = "draft"`, [id]);
+        if(existingDraft.length>0) {
+            throw Object.assign( new Error('El cliente ya tiene un invoice activo'),
+            {
+                status: 409,
+                code: "DRAFT_ALREADY_EXISTS",
+                timestamp: new Date().toISOString(),
+                details: { existingDraftId: existingDraft[0].id }
+            })
+        }
+
+        await connection.query('INSERT INTO invoices (client_id) VALUES (?)', [id]);
+        const [rows] = await connection.query("SELECT id FROM invoices WHERE client_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 1", [id]);
+        if(rows.length===0)
         {
             throw Object.assign( new Error('Error buscando registro'),
             {
@@ -29,8 +46,8 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        const [precio] = await req.pool.query('SELECT unit_price FROM products WHERE id = ?', [productId]);
-        if(precio.length===0)
+        const [productInfo] = await connection.query('SELECT unit_price, stock, reserved_stock FROM products WHERE id = ?', [productId]);
+        if(productInfo.length===0)
         {
             throw Object.assign( new Error('Error encontrando el precio del producto'),
             {
@@ -40,10 +57,25 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        const subtotal = precio[0].unit_price * quantity;
+        const realStock = productInfo[0].stock - productInfo[0].reserved_stock;
+        if(realStock-quantity < 0) {
+            throw Object.assign( new Error('No hay suficiente stock del producto seleccionado'),
+            {
+                status: 409,
+                code: "INSUFFICIENT_STOCK",
+                timestamp: new Date().toISOString(),
+                details: {
+                    productId,
+                    requestedQuantity: quantity,
+                    availableStock: realStock
+                }
+            })
+        }
 
-        const [result] = await req.pool.query('INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)',
-            [invoiceId[0].id, productId, quantity, precio[0].unit_price, subtotal]
+        const subtotal = productInfo[0].unit_price * quantity;
+
+        const [result] = await connection.query('INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)',
+            [rows[0].id, productId, quantity, productInfo[0].unit_price, subtotal]
         )
 
         if(result.affectedRows===0)
@@ -56,10 +88,15 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        return res.status(201).json( {invoiceId: invoiceId[0].id} );
+        await connection.commit();
+
+        return res.status(201).json( {invoiceId: rows[0].id} );
     } catch(error) {
         console.error( "Error posteando invoice:", error.code || error );
+        if(connection) await connection.rollback()
         return res.status(error.status||500).json( {error: error.message || error} );
+    } finally {
+        if(connection) connection.release();
     }
 }
 

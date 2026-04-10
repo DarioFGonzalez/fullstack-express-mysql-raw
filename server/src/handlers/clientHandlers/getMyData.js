@@ -39,6 +39,34 @@ const getMyInvoices = async (req, res) => {
     }
 }
 
+const getThisInvoice = async (req, res) => {
+    const { id } = req.client;
+    const { invoiceId } = req.params;
+
+    validation.validateId(invoiceId);
+
+    const invoiceFields = 'id, status, total, created_at, issue_date, due_date, delivered_at, paid_at';
+
+    try {
+        const [response] = await req.pool.query(`SELECT ${invoiceFields} FROM invoices WHERE client_id = ? AND id = ?`, [id, invoiceId]);
+        if(response.length===0) {
+            throw Object.assign( new Error('Invoice con esa ID no encontrado'),
+            {
+                status: 404,
+                code: 'INVOICE_NOT_FOUND',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const invoiceById = await getInvoiceWithItems(req.pool, response[0].id);
+
+        return res.status(200).json(invoiceById);
+    } catch(error) {
+        console.error("Error trayendo invoice por id:", error.code||error);
+        return res.status(error.status||500).json( {error: error.message||error} );
+    }
+}
+
 const getMyActiveInvoice = async (req, res) => {
     const { id } = req.client;
     validation.validateId(id);
@@ -58,4 +86,4 @@ const getMyActiveInvoice = async (req, res) => {
     }
 }
 
-module.exports = { getMyProfile, getMyInvoices, getMyActiveInvoice };
+module.exports = { getMyProfile, getMyInvoices, getThisInvoice, getMyActiveInvoice };

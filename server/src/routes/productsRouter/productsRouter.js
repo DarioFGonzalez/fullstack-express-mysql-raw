@@ -4,7 +4,7 @@ const postProduct = require('../../handlers/productHandlers/postProduct');
 const { getAllproducts, getProductById, getProductsByQuery } = require('../../handlers/productHandlers/getProducts');
 const { updateProduct, toggleProduct } = require('../../handlers/productHandlers/updateProduct');
 const authMiddleware = require('../../middlewares/auth');
-const adminOnly = require('../../middlewares/adminOnly');
+const {adminOnly} = require('../../middlewares/adminOnly');
 
 //Public routes
 productsRouter.get('/all', getAllproducts);

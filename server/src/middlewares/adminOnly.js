@@ -23,4 +23,29 @@ const adminOnly = (req, res, next) => {
     }
 }
 
-module.exports = adminOnly;
+const activeClientOnly = (req, res, next) => {
+    try {
+        if(req.client?.status!=='active') {
+            throw Object.assign( new Error('No autorizado'),
+            {
+                status: 403,
+                code: 'UNAUTHORIZED',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        next();
+    } catch(error) {
+        console.error("Error en el middleware de autenticación de usuarios activos:", error.code||error);
+        if(error.name==='JsonWebTokenError') {
+            return res.status(401).json({ error: 'Token inválido' });
+        }
+        if(error.name==='TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expirado' });
+        }
+
+        return res.status(401).json({ error: 'No autorizado' });
+    }
+}
+
+module.exports = {adminOnly, activeClientOnly};
