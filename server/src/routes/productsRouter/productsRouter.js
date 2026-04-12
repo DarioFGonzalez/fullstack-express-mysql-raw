@@ -18,5 +18,4 @@ productsRouter.post('/', postProduct);
 productsRouter.patch('/:id', updateProduct);
 productsRouter.patch('/:id/toggle-active', toggleProduct);
 
-
 module.exports = productsRouter;
