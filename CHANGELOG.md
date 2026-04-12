@@ -1,5 +1,30 @@
 # Changelog
 
+## [Project v1.0] - 2026-04-12
+
+### Final Status
+- **Clients Module**: Full CRUD + JWT auth + role-based access (admin/client) + email verification + self-service (deactivate/reactivate)
+- **Products Module**: Full CRUD + search with whitelist + soft delete + admin-only write operations
+- **Invoices Module**: Full lifecycle (draft → confirm → deliver → paid/cancel) + stock management (reserved/real) + transactions + admin/client separation
+
+### Authentication & Authorization
+- JWT implemented with `authMiddleware`
+- `adminOnly` middleware for role-based access
+- `activeClientOnly` middleware for clients with active status
+- Login returns only token (client data fetched via `/me`)
+
+### Technical Highlights
+- No ORM: pure SQL queries with parameterized placeholders
+- Transactions on critical operations (confirm, deliver, cancel)
+- Batch updates with `CASE` statements
+- Composite primary keys in `invoice_items`
+- UUIDs for all primary keys
+
+### Pending (for future iterations)
+- Pagination for list endpoints
+- Real webhook integration (MercadoPago)
+- Frontend dashboard
+
 ## [Invoices Module] - 2026-04-02
 
 ### Schema

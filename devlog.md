@@ -1,5 +1,29 @@
 # Devlog
 
+## [PROJECT v1.0] - 2026-04-12
+
+### Backend terminado
+
+Después de varias semanas, el backend está completo. Tiene:
+
+- **Clientes**: registro, login, verificación por email, autogestión (perfil, contraseña, desactivación), roles (admin/cliente)
+- **Productos**: CRUD, búsqueda dinámica, soft delete, solo admin puede escribir
+- **Facturas**: ciclo completo (draft → confirm → deliver → paid/cancel), stock reservado y real, transacciones, separación por roles
+
+#### Lo que aprendí en el camino
+
+- JWT no guarda estado, pero podés consultar la DB para validar cosas mutables (status)
+- El orden de las rutas en Express importa (las específicas antes que las dinámicas)
+- Las transacciones no son magia, son `BEGIN`, `COMMIT`, `ROLLBACK`
+- `reserved_stock` es clave en un sistema mayorista
+- Documentar el proceso (devlog) ayuda a ordenar las ideas
+
+#### Próximo proyecto (si lo hay)
+
+- Frontend en React para consumir esta API
+- Paginación real
+- Webhook de MercadoPago
+
 ## [Clients Router Final] 2026-04-09
 
 ### Separación definitiva de rutas públicas, de cliente autenticado y de admin

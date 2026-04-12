@@ -13,6 +13,7 @@ Sistema completo con manejo de stock reservado, ciclo de vida de facturas y oper
 - bcrypt
 - crypto (tokens)
 - dotenv
+- jsonwebtoken (JWT)
 
 ---
 
@@ -23,6 +24,7 @@ src/
 ├── handlers/          # Controladores (req/res)
 ├── utils/             # Validaciones, query builders
 ├── config/            # DB connection pool
+├── middlewares/       # auth, adminOnly, activeClientOnly
 ├── routes/            # Definición de endpoints
 └── server.js          # Configuración Express
 ```
@@ -31,20 +33,23 @@ src/
 
 ## 📌 La aplicación sigue una arquitectura:
 
-**Routes → Handlers → Utils → Database**
+**Routes → Middlewares → Handlers → Utils → Database**
 
 ### Esto permite:
 - Separar responsabilidades
 - Reutilizar lógica (query builders, validaciones)
 - Mantener el código limpio y testeable
+- Control de acceso por roles (admin / cliente)
 
 ---
 
-## 🔐 Autenticación (próximo paso)
+## 🔐 Autenticación y autorización
 
-- JWT para proteger rutas sensibles
-- Middleware de autenticación
-- Roles: admin / cliente
+- **JWT** para proteger rutas sensibles
+- **`authMiddleware`** → verifica token y busca el estado actual del cliente en DB
+- **`adminOnly`** → restringe rutas a usuarios con `is_admin = true`
+- **`activeClientOnly`** → solo permite operaciones de escritura a clientes con `status = 'active'`
+- El `status` no se guarda en el token, se consulta en cada request (consistencia garantizada)
 
 ---
 
@@ -79,39 +84,50 @@ src/
 ## 📌 Endpoints
 
 ### 👤 Clientes
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/clients` | Registro con token de verificación |
-| `GET` | `/clients/verify/:token` | Activación de cuenta |
-| `GET` | `/clients/all` | Listar todos |
-| `GET` | `/clients/search?business_name=&email=&is_active=` | Búsqueda dinámica |
-| `GET` | `/clients/:id` | Obtener por ID |
-| `PATCH` | `/clients/:id` | Actualizar datos |
-| `PATCH` | `/clients/:id/change-password` | Cambiar contraseña |
-| `PATCH` | `/clients/:id/toggle-active` | Soft delete |
+
+| Método | Endpoint | Descripción | Acceso |
+|--------|----------|-------------|--------|
+| `POST` | `/clients` | Registro con token de verificación | Público |
+| `GET` | `/clients/verify/:token` | Activación de cuenta | Público |
+| `POST` | `/clients/login` | Login (devuelve token) | Público |
+| `GET` | `/clients/me` | Mi perfil | Cliente autenticado |
+| `PATCH` | `/clients/me` | Actualizar mi perfil | Cliente autenticado |
+| `PATCH` | `/clients/me/change-password` | Cambiar mi contraseña | Cliente autenticado |
+| `PATCH` | `/clients/me/deactivate` | Desactivar mi cuenta | Cliente autenticado |
+| `POST` | `/clients/me/reactivate` | Solicitar reactivación | Cliente autenticado |
+| `PATCH` | `/clients/me/reactivate/:token` | Reactivar cuenta | Público (por token) |
+| `GET` | `/clients/all` | Listar todos los clientes | Solo admin |
+| `GET` | `/clients/search` | Búsqueda dinámica | Solo admin |
+| `GET` | `/clients/:id` | Obtener cliente por ID | Solo admin |
+| `PATCH` | `/clients/:id/toggle` | Activar/desactivar cliente | Solo admin |
 
 ### 📦 Productos
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/products` | Crear producto |
-| `GET` | `/products/all` | Listar todos |
-| `GET` | `/products/search?sku=&name=&category=&is_active=` | Búsqueda dinámica |
-| `GET` | `/products/:id` | Obtener por ID |
-| `PATCH` | `/products/:id` | Actualizar |
-| `PATCH` | `/products/:id/toggle-active` | Soft delete |
+
+| Método | Endpoint | Descripción | Acceso |
+|--------|----------|-------------|--------|
+| `GET` | `/products/all` | Listar todos | Público |
+| `GET` | `/products/search` | Búsqueda dinámica | Público |
+| `GET` | `/products/:id` | Obtener por ID | Público |
+| `POST` | `/products` | Crear producto | Solo admin |
+| `PATCH` | `/products/:id` | Actualizar | Solo admin |
+| `PATCH` | `/products/:id/toggle-active` | Soft delete | Solo admin |
 
 ### 🧾 Facturas / Pedidos (Invoices)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/invoices` | Crear carrito (`draft`) con primer item |
-| `GET` | `/invoices/all` | Listar todas |
-| `GET` | `/invoices/search?client_id=&status=&other_queries` | Búsqueda con rangos |
-| `GET` | `/invoices/:id` | Obtener factura con items |
-| `PATCH` | `/invoices/:id` | Batch update (cantidad `0` = eliminar) |
-| `POST` | `/invoices/:id/confirm` | Confirmar pedido (✅ reserva stock) |
-| `POST` | `/invoices/:id/deliver` | Entregar (📦 descarga stock) |
-| `POST` | `/invoices/:id/paid` | Marcar como pagado (💰) |
-| `POST` | `/invoices/:id/cancel` | Cancelar (❌ libera stock) |
+
+| Método | Endpoint | Descripción | Acceso |
+|--------|----------|-------------|--------|
+| `POST` | `/invoices` | Crear carrito (`draft`) con primer item | Cliente activo |
+| `GET` | `/invoices/me` | Mis facturas | Cliente autenticado |
+| `GET` | `/invoices/me/active` | Mi carrito activo | Cliente autenticado |
+| `GET` | `/invoices/me/:invoiceId` | Obtener una de mis facturas | Cliente autenticado |
+| `PATCH` | `/invoices/:id` | Batch update (cantidad `0` = eliminar) | Cliente activo (solo draft) |
+| `POST` | `/invoices/:id/confirm` | Confirmar pedido (✅ reserva stock) | Cliente activo |
+| `POST` | `/invoices/:id/cancel` | Cancelar pedido (❌ libera stock) | Cliente activo |
+| `GET` | `/invoices/all` | Listar todas | Solo admin |
+| `GET` | `/invoices/search` | Búsqueda con rangos | Solo admin |
+| `GET` | `/invoices/:id` | Obtener factura por ID | Solo admin |
+| `POST` | `/invoices/:id/deliver` | Entregar (📦 descarga stock) | Solo admin |
+| `POST` | `/invoices/:id/paid` | Marcar como pagado (💰) | Webhook / Admin |
 
 ---
 
@@ -123,7 +139,8 @@ src/
 - UUID como primary keys
 - Hash de contraseñas con bcrypt
 - Token de verificación con crypto
-- Soft delete con `is_active`
+- JWT con middlewares de autenticación y roles
+- Soft delete con `is_active` / `status`
 - Búsquedas dinámicas con whitelist
 - Rangos numéricos y de fechas (`BETWEEN`, `>=`, `<=`)
 - Batch updates (`INSERT ... ON DUPLICATE KEY UPDATE`)
@@ -145,10 +162,8 @@ npm run dev
 
 ## 🔒 Mejoras futuras
 
-- JWT y middleware de autenticación
-- Roles y permisos (admin / cliente)
 - Paginación en listados
-- Webhook de pagos (MercadoPago)
+- Webhook real de pagos (MercadoPago)
 - Dashboard de administración
 - Tests unitarios y de integración
 - Documentación con Swagger
@@ -160,10 +175,10 @@ npm run dev
 | Módulo | Estado |
 |--------|--------|
 | Clients CRUD | ✅ Completado |
+| Clients self-service (perfil, cambio pass, reactivación) | ✅ Completado |
 | Products CRUD | ✅ Completado |
-| Invoices (draft + search) | ✅ Completado |
-| Confirm / Deliver / Cancel / Paid | ✅ Completado |
-| Autenticación JWT | ⏳ Pendiente |
+| Invoices CRUD + ciclo de vida (confirm/deliver/paid/cancel) | ✅ Completado |
+| Autenticación JWT + middlewares + roles | ✅ Completado |
 
 ---
 
