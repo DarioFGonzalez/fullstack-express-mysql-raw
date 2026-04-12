@@ -16,6 +16,25 @@ const confirmInvoice = async (req, res) => {
         
         await connection.beginTransaction();
 
+        const [rows] = await connection.query('SELECT status FROM invoices WHERE id = ?', [ id ]);
+        if(rows.length===0) {
+            throw Object.assign( new Error('Invoice no encontrado'),
+            {
+                status: 404,
+                code: "INVOICE_NOT_FOUND",
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        if(rows[0].status!=='confirmed') {
+            throw Object.assign( new Error('Solo invoices en "draft" pueden confirmarse'),
+            {
+                status: 400,
+                code: "ONLY_DRAFT_INVOICES_CAN_BE_CONFIRMED",
+                timestamp: new Date().toISOString()
+            })
+        }
+
         const caseConditions = [];
         const values = [];
         const ids = [];

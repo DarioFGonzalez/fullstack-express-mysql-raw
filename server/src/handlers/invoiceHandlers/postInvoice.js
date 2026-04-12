@@ -8,7 +8,7 @@ const postInvoice = async (req, res) => {
 
         await connection.beginTransaction();
 
-        const { productId, quantity } = req.body;
+        const { product_id, quantity } = req.body;
         const { id } = req.client;
 
         if(quantity<=0)
@@ -21,7 +21,7 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        validations.validateId(productId);
+        validations.validateId(product_id);
 
         const [existingDraft] = await connection.query(`SELECT id FROM invoices WHERE client_id = ? AND status = "draft"`, [id]);
         if(existingDraft.length>0) {
@@ -46,7 +46,7 @@ const postInvoice = async (req, res) => {
             })
         }
 
-        const [productInfo] = await connection.query('SELECT unit_price, stock, reserved_stock FROM products WHERE id = ?', [productId]);
+        const [productInfo] = await connection.query('SELECT unit_price, stock, reserved_stock FROM products WHERE id = ?', [product_id]);
         if(productInfo.length===0)
         {
             throw Object.assign( new Error('Error encontrando el precio del producto'),
@@ -75,7 +75,7 @@ const postInvoice = async (req, res) => {
         const subtotal = productInfo[0].unit_price * quantity;
 
         const [result] = await connection.query('INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)',
-            [rows[0].id, productId, quantity, productInfo[0].unit_price, subtotal]
+            [rows[0].id, product_id, quantity, productInfo[0].unit_price, subtotal]
         )
 
         if(result.affectedRows===0)

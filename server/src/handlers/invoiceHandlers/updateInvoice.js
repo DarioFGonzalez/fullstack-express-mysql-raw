@@ -5,6 +5,26 @@ const updateInvoice = async (req, res) => {
         const { id } = req.params;
         validation.validateId(id);
 
+        const [thisInvoice] = await req.pool.query('SELECT status FROM invoices WHERE id = ?', [ id ]);
+        if(thisInvoice.length===0)
+        {
+            throw Object.assign( new Error('Invoice inexistente'),
+            {
+                status: 404,
+                code: 'INVOICE_NOT_FOUND',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        if(thisInvoice[0].status!=='draft') {
+            throw Object.assign( new Error('Solo invoices en estado "draft" pueden ser modificados'),
+            {
+                status: 400,
+                code: "ONLY_DRAFT_INVOICES_CAN_BE_MODIFIED",
+                timestamp: new Date().toISOString()
+            })
+        }
+
         const productIds = [];
 
         const productsBatch = req.body;
@@ -21,17 +41,6 @@ const updateInvoice = async (req, res) => {
             validation.validateId(productInfo.product_id);
             productIds.push(productInfo.product_id);
         })
-
-        const [thisInvoice] = await req.pool.query('SELECT * FROM invoices WHERE id = ?', [ id ]);
-        if(thisInvoice.length===0)
-        {
-            throw Object.assign( new Error('Invoice inexistente'),
-            {
-                status: 404,
-                code: 'INVOICE_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
-        }
 
         const placeHolders = productIds.map( () => '?' ).join(', ');
 

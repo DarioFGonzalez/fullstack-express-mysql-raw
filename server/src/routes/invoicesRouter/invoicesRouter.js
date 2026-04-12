@@ -20,12 +20,11 @@ invoicesRouter.use(activeClientOnly);
 invoicesRouter.post('/', postInvoice);
 
 invoicesRouter.get('/me', getMyInvoices);
-invoicesRouter.get('/me/:invoiceId', getThisInvoice);
 invoicesRouter.get('/me/active', getMyActiveInvoice);
+invoicesRouter.get('/me/:invoiceId', getThisInvoice);
 
 invoicesRouter.patch('/:id', updateInvoice);
 invoicesRouter.post('/:id/confirm', confirmInvoice);
-
 invoicesRouter.post('/:id/cancel', cancelInvoice);
 
 //Admin routes
