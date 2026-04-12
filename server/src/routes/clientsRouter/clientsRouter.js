@@ -2,7 +2,7 @@ const {Router} = require('express');
 const clientsRouter = Router();
 const postClient = require('../../handlers/clientHandlers/postClient');
 const { getAllClients, getClientById, getClientsByQuery } = require('../../handlers/clientHandlers/getClients');
-const { changeMyPassword, updateMyProfile, deactivateMySelf, toggleClient } = require('../../handlers/clientHandlers/updateClients');
+const { changeMyPassword, updateMyProfile, deactivateMySelf, toggleClient, toggleAdmin } = require('../../handlers/clientHandlers/updateClients');
 const loginClient = require('../../handlers/clientHandlers/loginClient');
 const {verifyMail, sendReactivationMail, reactivateMyAccount} = require('../../handlers/clientHandlers/verifyClient');
 const authMiddleware = require('../../middlewares/auth');
@@ -31,7 +31,9 @@ clientsRouter.use(adminOnly);
 
 clientsRouter.get('/all', getAllClients);
 clientsRouter.get('/search', getClientsByQuery);
+
 clientsRouter.patch('/:id/toggle', toggleClient);
+clientsRouter.patch('/:id/toggle-admin', toggleAdmin);
 
 clientsRouter.get('/:id', getClientById);
 

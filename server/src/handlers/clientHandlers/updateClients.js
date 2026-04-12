@@ -239,4 +239,40 @@ const toggleClient = async (req, res) =>
     }
 }
 
-module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf, toggleClient };
+const toggleAdmin = async (req, res) => {
+    const {id} = req.params;
+    
+    try {
+        validation.validateId(id);
+
+        if(id===req.client.id) {
+            throw Object.assign( new Error('No puede auto-quitarse los privilegios'),
+            {
+                status: 403,
+                code: 'CANNOT_TOGGLE_OWN_PRIVILEGES',
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const [rows] = await req.pool.query('SELECT is_admin FROM clients WHERE id = ?', [id]);
+        if(rows.length===0) {
+            throw Object.assign( new Error('Cliente no encontrado'),
+            {
+                status: 404,
+                code: "CLIENT_NOT_FOUND",
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const new_privilege = rows[0].is_admin===1 ? 0 : 1;
+
+        await req.pool.query('UPDATE clients SET is_admin = ? WHERE id = ?', [new_privilege, id]);
+
+        return res.status(200).json( {message: 'Privilegios del cliente actualizados', new_privilege} );
+    } catch(error) {
+        console.error( "Error en toggleAdmin:", error.code || error);
+        return res.status(error.status||500).json( { error: error.message || error } );
+    }
+}
+
+module.exports = { updateMyProfile, changeMyPassword, deactivateMySelf, toggleClient, toggleAdmin };
