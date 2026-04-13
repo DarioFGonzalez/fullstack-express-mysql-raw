@@ -1,3 +1,19 @@
+<div align="center">
+
+# 🚀 **B2B Stock Reserve API** 
+### *Transactional inventory system with ACID guarantees*
+
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen)
+![Transactions](https://img.shields.io/badge/ACID-transactions-blue)
+![Stock](https://img.shields.io/badge/feature-reserved--stock-orange)
+![MySQL](https://img.shields.io/badge/MySQL-raw--queries-4479A1)
+
+**⚡ 30+ endpoints | 🔐 JWT + roles | 📦 Reserved stock | 💰 Invoice lifecycle**
+
+</div>
+
+---
+
 # 🏭 Fullstack Express + MySQL (Raw Queries)
 
 API REST para gestión de pedidos y facturación B2B (mayorista).  
