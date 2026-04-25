@@ -1,8 +1,34 @@
+<div align="center">
+
+# 🚀 **B2B Stock Reserve API** 
+### *Transactional inventory system with ACID guarantees*
+
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen)
+![Transactions](https://img.shields.io/badge/ACID-transactions-blue)
+![Stock](https://img.shields.io/badge/feature-reserved--stock-orange)
+![MySQL](https://img.shields.io/badge/MySQL-raw--queries-4479A1)
+
+**⚡ 30+ endpoints | 🔐 JWT + roles | 📦 Reserved stock | 💰 Invoice lifecycle**
+
+</div>
+
+---
+
 # 🏭 Fullstack Express + MySQL (Raw Queries)
 
 API REST para gestión de pedidos y facturación B2B (mayorista).  
 Sistema completo con manejo de stock reservado, ciclo de vida de facturas y operaciones transaccionales.  
 **Sin ORM - queries SQL puras.**
+
+## 🎯 ¿Qué problema resuelve este proyecto?
+
+**Sistemas B2B mayoristas** necesitan:
+- ✅ Reservar stock cuando un pedido se confirma (no cuando se paga)
+- ✅ Liberar stock si el pedido se cancela
+- ✅ Descontar stock real solo al entregar
+- ✅ Todo dentro de transacciones ACID para que no haya inconsistencias
+
+**Este proyecto implementa exactamente eso, con SQL puro y sin ORM.**
 
 ---
 
