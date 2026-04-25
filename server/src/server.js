@@ -14,6 +14,4 @@ server.use( (req, res, next) => {
 
 server.use( mainRouter );
 
-server.get('/', (req, res) => res.send('hola') );
-
 module.exports = server;

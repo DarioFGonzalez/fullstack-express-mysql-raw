@@ -56,16 +56,16 @@ const validateToken = (token) => {
             timestamp: new Date().toISOString()
         })
     }
-    if(isValidToken(token)) {
-        return true;
+    if(!tokenRegex.test(token)) {
+        throw Object.assign( new Error('Formato del token inválido'),
+        {
+            status:400,
+            code: "INVALID_TOKEN_FORMAT",
+            timestamp: new Date().toISOString()
+        })
     }
-
-    throw Object.assign( new Error ('Formato del token no válido'),
-    {
-        status: 400,
-        code: 'INVALID_TOKEN_FORMAT',
-        timestamp: new Date().toISOString()
-    } );    
+    
+    return true;
 }
 
 const validatePaymentTerms = (payment_terms) => {

@@ -1,5 +1,74 @@
 const { isValidUUID } = require("./validations");
+const validation = require('./validations');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
+/*REFACTOR*/
+//Post query builders
+const postQueryBuilder = (allowedParams) => (queries) => {
+    const columns = [];
+    const placeholders = [];
+    const values = [];
+
+    for(const [key, value] of Object.entries(queries) ) {
+        if( allowedParams.includes(key) ) {
+            columns.push(key);
+            placeholders.push('?');
+            values.push(value);
+        }
+    }
+
+    return { columns, placeholders, values };
+}
+
+const postClientQueryBuilder = async (queries) => {
+    if(Object.keys(queries).length===0) {
+        throw Object.assign( new Error('No se recibió nada por body'),
+        {
+            status: 400,
+            code: 'RECEIVED_AN_EMPTY_BODY',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    const mandatoryColumns = [ 'business_name', 'password', 'tax_id', 'email', 'password' ];
+    const optionalColumns = [ 'phone', 'address', 'contact_name', 'contact_phone', 'verification_token' ];
+
+    checkMandatoryColumns(mandatoryColumns, queries);
+
+    validation.validateEmail(queries.email);
+    validation.validatePassword(queries.password);
+    
+    const hashedPassword = await bcrypt.hash( queries.password, 10 );
+
+    queries.password = hashedPassword;
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    queries.verification_token = verificationToken;
+
+    const builder = postQueryBuilder( [...mandatoryColumns, ...optionalColumns] );
+
+    return builder(queries);
+}
+
+
+//Helpers
+const checkMandatoryColumns = (mandatoryColumns, queries) => {
+    const missingFields = mandatoryColumns.filter( field => !(field in queries));
+    if(missingFields.length>0) {
+        throw Object.assign( new Error(`Faltan campos obligatorios: ${missingFields.join(', ')}`),
+        {
+            status: 400,
+            code: "MISSING_REQUIRED_FIELDS",
+            missingFields,
+            timestamp: new Date().toISOString()
+        })
+    }
+    return true;
+}
+
+//LEGACY
 const queryBuilder = (queries) => {
     const allowedColumns = ['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id"];
 
@@ -258,6 +327,7 @@ const invoiceByQueryBuilder =(queries) =>
 }
 
 module.exports = {
+    postClientQueryBuilder,
     queryBuilder, updateQueryBuilder,
     productQueryBuilder, searchProductByQuery, updateProductQuery,
     invoiceByQueryBuilder };
