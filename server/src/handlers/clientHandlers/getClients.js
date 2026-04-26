@@ -1,5 +1,5 @@
 const validation = require('../../utils/validations');
-const { queryBuilder } = require('../../utils/queryBuilder');
+const { queryBuilder, searchClientsQuery } = require('../../utils/queryBuilder');
 
 const getAllClients = async (req, res) => {
     try {
@@ -15,16 +15,15 @@ const getAllClients = async (req, res) => {
 
 const getClientsByQuery = async (req, res) => {
     try {
-        const { conditions, values } = queryBuilder(req.query);
-
-        const whereCondition = conditions.join(' AND ');
+        const { queryFilters, values } = searchClientsQuery(req.query);
         
         const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${whereCondition}`, [values]);
+        
         return res.status(200).json( rows );
     }
     catch(error) {
-        console.error('Error en /clients:', error.code || error);
-        res.status(error.status || 500).json( { error: error.message || 'Error interno' } );
+        console.error('Error trayendo clientes por query:', error.code || error);
+        res.status(error.status || 500).json( { error: error.message || error } );
     }
 };
 

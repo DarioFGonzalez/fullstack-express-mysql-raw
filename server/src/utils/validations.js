@@ -3,7 +3,7 @@ const emailRegex = /^[^\s@]{3,}@([^\s@]+\.)+[^\s@]{2,}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 const tokenRegex = /^[0-9a-f]{64}$/i;
 
-const selectedFields = 'id, business_name, tax_id, email, phone, address, contact_name, contact_phone, created_at, updated_at, last_login, status, is_admin, email_verified_at';
+const selectedFields = 'id, business_name, tax_id, email, phone, address, contact_name, contact_phone, last_login, status, is_admin';
 
 const isValidUUID = (uuid) => {
     if(!uuid || typeof uuid !== 'string') return false;
@@ -15,14 +15,36 @@ const isValidEmail = (email) => {
     return emailRegex.test(email);
 }
 
+const isValidToken = (token) => {
+    if(!token || typeof token !== 'string') return false;
+    return tokenRegex.test(token);
+}
+
+//toReplace with validatePassword
 const isValidPassword = (password) => {
     if(!password || typeof password !== 'string') return false;
     return passwordRegex.test(password);
 }
 
-const isValidToken = (token) => {
-    if(!token || typeof token !== 'string') return false;
-    return tokenRegex.test(token);
+const validatePassword = (password) => {
+    if(!password) {
+            throw Object.assign( new Error('Contraseña no recibida'),
+            {
+                status: 400,
+                code: "NO_ID_PASSWORD",
+                timestamp: new Date().toISOString()
+            })
+    }
+    if(!passwordRegex.test(password)) {
+            throw Object.assign( new Error('Formato de la contraseña inválido'),
+            {
+                status:400,
+                code: "INVALID_PASSWORD_FORMAT",
+                timestamp: new Date().toISOString()
+            })
+    }
+
+    return true
 }
 
 const validateId = (id) => {
@@ -136,6 +158,6 @@ const validatePassword = (password) => {
 module.exports = {
     selectedFields,
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
-    validateId, validateEmail, validatePassword, validateToken,
+    validateId, validateEmail, validatePassword, validatePassword, validateToken,
     validatePaymentTerms,
  };

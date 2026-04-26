@@ -52,6 +52,77 @@ const postClientQueryBuilder = async (queries) => {
     return builder(queries);
 }
 
+//GET by Query Builders
+const getByQueryBuilder = (allowedFilters) => (queries) => {
+    if(Object.keys(queries).length===0) {
+    throw Object.assign( new Error('No se recibió nada por body'),
+        {
+            status: 400,
+            code: 'RECEIVED_AN_EMPTY_BODY',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    const filters = [];
+    const values = [];
+
+    for(const [key, value] of Object.entries(queries)) {
+        if(allowedFilters.includes(key)) {
+            filters.push(`${key} = ?`);
+            values.push(value);
+        }
+    }
+
+    if(filters.length===0) {
+        throw Object.assign( new Error('Sin filtros válidos'),
+        {
+            status: 400,
+            code: 'NO_VALID_FILTERS_TO_SEARCH',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    const queryFilters = filters.join(' AND ');
+
+    return { queryFilters, values };
+}
+
+const searchClientsQuery = getByQueryBuilder(['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id"]);
+
+//UPDATE Builders
+const updateQueryBuilder = (allowedParams) => (queries) => {
+    if(Object.keys(queries).length===0) {
+        throw Object.assign( new Error('No se recibió nada por body'),
+        {
+            status: 400,
+            code: 'RECEIVED_AN_EMPTY_BODY',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    const conditions = [];
+    const values = [];
+
+    for(const [key, value] of Object.entries(queries) ) {
+        if( allowedParams.includes(key) ) {
+            conditions.push(`${key} = ?`);
+            values.push(value);
+        }
+    }
+
+    if(conditions.length===0) {
+        throw Object.assign( new Error('Sin condiciones para actualizar'),
+        {
+            status: 400,
+            code: 'NO_VALID_CONDITIONS_TO_UPDATE',
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    return { conditions, values };
+}
+
+const updateClientBuilder = updateQueryBuilder([ 'phone', 'address', 'contact_name', 'contact_phone' ]);
 
 //Helpers
 const checkMandatoryColumns = (mandatoryColumns, queries) => {
@@ -328,6 +399,8 @@ const invoiceByQueryBuilder =(queries) =>
 
 module.exports = {
     postClientQueryBuilder,
+    searchClientsQuery,
+    updateClientBuilder,
     queryBuilder, updateQueryBuilder,
     productQueryBuilder, searchProductByQuery, updateProductQuery,
     invoiceByQueryBuilder };

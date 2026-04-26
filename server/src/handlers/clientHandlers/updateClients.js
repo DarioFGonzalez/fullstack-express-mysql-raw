@@ -1,22 +1,12 @@
 const validation = require('../../utils/validations');
-const { updateQueryBuilder } = require('../../utils/queryBuilder');
+const { updateClientBuilder } = require('../../utils/queryBuilder');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const updateMyProfile = async (req, res) =>
 {
     try {
-        const { conditions, values } = updateQueryBuilder(req.body);
-
-        if(conditions.length===0)
-        {
-            throw Object.assign( new Error('Sin condiciones para actualizar'),
-            {
-                status: 400,
-                code: 'NO_CONDITIONS_TO_UPDATE',
-                timestamp: new Date().toISOString()
-            })
-        }
+        const { conditions, values } = updateClientBuilder(req.body);
 
         validation.validateId(req.client.id);
 
@@ -36,11 +26,11 @@ const updateMyProfile = async (req, res) =>
             } );
         }
 
-        const [rows] = await req.pool.query( `SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [req.params.id] );
+        const [rows] = await req.pool.query( `SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [req.client.id] );
 
         return res.status(200).json(rows[0]);
     } catch(error) {
-        console.error('Error en updateClient: ', error.code || error);
+        console.error('Error en updateClient:', error.code || error);
         return res.status(error.status || 500).json( {error: error.message} );
     }
 }
@@ -61,38 +51,18 @@ const changeMyPassword = async (req, res) =>
             })
         }
 
-        if(!validation.isValidPassword(newPassword))
-        {
-            throw Object.assign( new Error('Formato de la nueva contraseña inválido'),
-            {
-                status: 400,
-                code: 'INVALID_NEW_PASSWORD_FORMAT',
-                timestamp: new Date().toISOString()
-            } );
-        }
+        validation.validatePassword(newPassword);
 
         const [rows] = await req.pool.query('SELECT password FROM clients WHERE id = ?', [id]);
 
         if(rows.length===0)
         {
-            throw Object.assign( new Error('Cliente con esa ID no encontrado'),
+            throw Object.assign( new Error('Cliente no encontrado'),
             {
                 status: 404,
                 code: "CLIENT_NOT_FOUND",
                 timestamp: new Date().toISOString()
             } );
-        }
-
-        const isSamePassword = await bcrypt.compare(newPassword, rows[0].password);
-
-        if(isSamePassword)
-        {
-            throw Object.assign( new Error('La nueva contraseña debe ser diferente de la actual'),
-            {
-                status: 400,
-                code: "SAME_PASSWORD_CONFLICT",
-                timestamp: new Date().toISOString()
-            })
         }
 
         const isValid = await bcrypt.compare(password, rows[0].password);
@@ -103,6 +73,18 @@ const changeMyPassword = async (req, res) =>
             {
                 status: 401,
                 code: "UNAUTHORIZED_WITHOUT_PASSWORD",
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const isSamePassword = await bcrypt.compare(newPassword, rows[0].password);
+
+        if(isSamePassword)
+        {
+            throw Object.assign( new Error('La nueva contraseña debe ser diferente de la actual'),
+            {
+                status: 400,
+                code: "SAME_PASSWORD_CONFLICT",
                 timestamp: new Date().toISOString()
             })
         }
