@@ -23,11 +23,13 @@ const authMiddleware = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const [status] = await req.pool.query('SELECT status FROM clients WHERE id = ?', [decoded.id]);
+        const [status] = await req.pool.query('SELECT status, is_admin FROM clients WHERE id = ?', [decoded.id]);
 
         decoded.status = status[0].status;
+        decoded.is_admin = status[0].is_admin;
 
         req.client = decoded;
+
         next();
     } catch(error) {
         console.error("Error en el middleware de autenticación:", error.code||error);

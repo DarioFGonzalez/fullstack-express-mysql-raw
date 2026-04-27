@@ -16,8 +16,8 @@ const getAllClients = async (req, res) => {
 const getClientsByQuery = async (req, res) => {
     try {
         const { queryFilters, values } = searchClientsQuery(req.query);
-        
-        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${whereCondition}`, [values]);
+
+        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${queryFilters}`, [values]);
         
         return res.status(200).json( rows );
     }

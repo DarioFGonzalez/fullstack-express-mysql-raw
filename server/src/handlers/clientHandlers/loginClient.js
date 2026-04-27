@@ -1,6 +1,7 @@
 const { validateEmail, validatePassword } = require("../../utils/validations");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const createError = require("../../utils/errorBuilder");
 
 const loginClient = async (req, res) => {
     const {email, password} = req.body;
@@ -8,26 +9,16 @@ const loginClient = async (req, res) => {
     try {
         validateEmail(email);
         validatePassword(password);
-        const fields = 'id, is_admin, password';
+        const fields = 'id, password';
 
         const [client] = await req.pool.query(`SELECT ${fields} FROM clients WHERE email = ?`, [ email ]);
         if(client.length===0) {
-            throw Object.assign( new Error('Credenciales inválidas'),
-            {
-                status: 401,
-                code: 'INVALID_CREDENTIALS',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Credenciales inválidas', 401, 'INVALID_CREDENTIALS');
         }
 
         const correctPassword = await bcrypt.compare(password, client[0].password);
         if(!correctPassword) {
-            throw Object.assign( new Error('Credenciales inválidas'),
-            {
-                status: 401,
-                code: 'INVALID_CREDENTIALS',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Credenciales inváldas', 401, 'INVALID_CREDENTIALS');
         }
         
         delete client[0].password;

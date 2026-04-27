@@ -1,9 +1,12 @@
+const createError = require('./errorBuilder');
+
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const emailRegex = /^[^\s@]{3,}@([^\s@]+\.)+[^\s@]{2,}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 const tokenRegex = /^[0-9a-f]{64}$/i;
 
 const selectedFields = 'id, business_name, tax_id, email, phone, address, contact_name, contact_phone, last_login, status, is_admin';
+const productFields = 'id, sku, name, description, category, unit_price, stock, reserved_stock, is_active';
 
 const isValidUUID = (uuid) => {
     if(!uuid || typeof uuid !== 'string') return false;
@@ -28,135 +31,64 @@ const isValidPassword = (password) => {
 
 const validatePassword = (password) => {
     if(!password) {
-            throw Object.assign( new Error('Contraseña no recibida'),
-            {
-                status: 400,
-                code: "NO_ID_PASSWORD",
-                timestamp: new Date().toISOString()
-            })
+        throw createError('Contraseña no recibida', 400, 'PASSWORD_REQUIRED');
     }
     if(!passwordRegex.test(password)) {
-            throw Object.assign( new Error('Formato de la contraseña inválido'),
-            {
-                status:400,
-                code: "INVALID_PASSWORD_FORMAT",
-                timestamp: new Date().toISOString()
-            })
+        throw createError('Formato de la contraseña inválido', 400, 'INVALID_PASSWORD_FORMAT');
     }
 
     return true
 }
 
 const validateId = (id) => {
-        if(!id)
-        {
-            throw Object.assign( new Error('ID no recibido'),
-            {
-                status: 400,
-                code: "NO_ID_RECEIVED",
-                timestamp: new Date().toISOString()
-            })
-        }
-        if(!isValidUUID(id))
-        {
-            throw Object.assign( new Error('Formato del ID inválido'),
-            {
-                status:400,
-                code: "INVALID_ID_FORMAT",
-                timestamp: new Date().toISOString()
-            })
-        }
-        return true;
+    if(!id) {
+        throw createError('ID no recibido', 400, 'ID_REQUIRED');
+    }
+    if(!isValidUUID(id)) {
+        throw createError('Formato del ID inválido', 400, 'INVALID_ID_FORMAT');
+    }
+
+    return true;
 }
 
 const validateToken = (token) => {
     if(!token) {
-        throw Object.assign( new Error('Falta el token'),
-        {
-            status: 400,
-            code: 'MISSING_VERIFICATION_TOKEN',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Token no recibido', 400, 'TOKEN_REQUIRED');
     }
     if(!tokenRegex.test(token)) {
-        throw Object.assign( new Error('Formato del token inválido'),
-        {
-            status:400,
-            code: "INVALID_TOKEN_FORMAT",
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Formato del token inválido', 400, 'INVALID_TOKEN_FORMAT');
     }
     
     return true;
 }
 
 const validatePaymentTerms = (payment_terms) => {
-    if(!payment_terms)
-    {
-        throw Object.assign( new Error('Términos de pago no encontrados'),
-        {
-            status: 400,
-            code: "PAYMENT_TERMS_NOT_FOUND",
-            timestamp: new Date().toISOString()
-        })
+    if(!payment_terms) {
+        throw createError('Términos de pago no recibidos', 400, 'PAYMENT_TERMS_REQUIRED');
     }
+
     const allowedPaymentTerms = [ '30', '60', '90', '120' ];
-    if(!allowedPaymentTerms.includes(payment_terms))
-    {
-        throw Object.assign( new Error('Término de pago no válido'),
-        {
-            status: 400,
-            code: 'INVALID_PAYMENT_TERM',
-            timestamp: new Date().toISOString()
-        })
+    
+    if(!allowedPaymentTerms.includes(payment_terms)) {
+        throw createError('Término de pago no válido', 400, 'INVALID_PAYMENT_TERM');
     }
+
     return true;
 }
 
 const validateEmail = (email) => {
     if(!email) {
-        throw Object.assign( new Error('Email no recibido'),
-        {
-            status: 400,
-            code: 'MISSING_EMAIL',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Email no recibido', 400, 'EMAIL_REQUIRED');
     }
     if(!emailRegex.test(email)) {
-        throw Object.assign( new Error('Formato de email inválido'),
-        {
-            status: 400,
-            code: 'INVALID_EMAIL_FORMAT',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Formato del email inválido', 400, 'INVALID_EMAIL_FORMAT');
     };
 
     return true;
 }
 
-const validatePassword = (password) => {
-    if(!password) {
-        throw Object.assign( new Error('Password no recibido'),
-        {
-            status: 400,
-            code: 'MISSING_PASSWORD',
-            timestamp: new Date().toISOString()
-        })
-    }
-    if(!passwordRegex.test(password)) {
-        throw Object.assign( new Error('Formato de contraseña inválido'),
-        {
-            status: 400,
-            code: 'INVALID_PASSWORD_FORMAT',
-            timestamp: new Date().toISOString()
-        })
-    }
-
-    return true;
-}
-
 module.exports = {
-    selectedFields,
+    selectedFields, productFields,
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
     validateId, validateEmail, validatePassword, validatePassword, validateToken,
     validatePaymentTerms,

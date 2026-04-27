@@ -2,35 +2,30 @@ const validation = require('../../utils/validations');
 const { updateClientBuilder } = require('../../utils/queryBuilder');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const createError = require('../../utils/errorBuilder');
 
 const updateMyProfile = async (req, res) =>
 {
     try {
-        const { conditions, values } = updateClientBuilder(req.body);
+        const { conditionsQuery, values } = updateClientBuilder(req.body);
 
         validation.validateId(req.client.id);
 
         values.push(req.client.id);
         
-        const query = `UPDATE clients SET ${conditions.join(', ')} WHERE id = ?`;
+        const updateQuery = `UPDATE clients SET ${conditionsQuery} WHERE id = ?`;
 
-        const [result] = await req.pool.query( query, values );
+        const [result] = await req.pool.query( updateQuery, values );
 
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: 'CLIENT_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            } );
+        if(result.affectedRows===0) {
+            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
         }
 
         const [rows] = await req.pool.query( `SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [req.client.id] );
 
         return res.status(200).json(rows[0]);
     } catch(error) {
-        console.error('Error en updateClient:', error.code || error);
+        console.error('Error actualizando cliente:', error.code || error);
         return res.status(error.status || 500).json( {error: error.message} );
     }
 }
@@ -183,8 +178,6 @@ const toggleClient = async (req, res) =>
             inactive: `"active", verification_token = NULL`
         }
 
-        console.log("status: ", status, "\nstatusList[status]: ", statusList[status]);
-
         if(!statusList[status]) {
             throw Object.assign( new Error('Status actual no intercambiable'),
             {
@@ -199,8 +192,6 @@ const toggleClient = async (req, res) =>
         SET
             status = ${statusList[status]}
         WHERE id = ?`;
-
-        console.log("toggleQuery: ", toggleQuery);
 
         const [result] = await req.pool.query( toggleQuery, values );
 

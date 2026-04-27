@@ -5,9 +5,9 @@ const { postClientQueryBuilder } = require('../../utils/queryBuilder');
 
 const postClient = async (req, res) => {
     try {
-        const { columns, placeholders, values } = await postClientQueryBuilder(req.body);
+        const { columnsQuery, placeholders, values } = await postClientQueryBuilder(req.body);
 
-        const insertQuery = `INSERT INTO clients (${columns.join(', ')}) VALUES (${placeholders})`;
+        const insertQuery = `INSERT INTO clients (${columnsQuery}) VALUES (${placeholders})`;
 
         await req.pool.query( insertQuery, values );
 

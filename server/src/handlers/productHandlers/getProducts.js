@@ -1,14 +1,14 @@
 const validation = require('../../utils/validations');
-const { searchProductByQuery } = require('../../utils/queryBuilder');
+const { searchProductByQuery, searchProductQuery } = require('../../utils/queryBuilder');
 
 const getAllproducts = async (req, res) => {
     try {
-        const [rows] = await req.pool.query('SELECT * FROM products');
+        const [rows] = await req.pool.query(`SELECT ${validation.productFields} FROM products`);
 
         return res.status(200).json( rows );
     } catch(error) {
-        console.error( 'Error en products/all:', error );
-        return res.status(500).json( { error: error.message } );
+        console.error( 'Error trayendo todos los productos:', error.code||error );
+        return res.status(error.status||500).json( { error: error.message || error } );
     }
 }
 
@@ -16,35 +16,12 @@ const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        if(!id)
-        {
-            throw Object.assign( new Error('Falta ID'),
-            {
-                status: 400,
-                code: 'MISSING_ID',
-                timestamp: new Date().toISOString()
-            })
-        }
-        if(!validation.isValidUUID(id))
-        {
-            throw Object.assign( new Error('Formato del ID inválido'),
-            {
-                status: 400,
-                code: 'INVALID_ID_FORMAT',
-                timestamp: new Date().toISOString()
-            })
-        }
+        validation.validateId(id);
 
         const [rows] = await req.pool.query('SELECT * FROM products WHERE id = ?', [id]);
 
-        if(rows.length===0)
-        {
-            throw Object.assign( new Error('Producto con ese ID no encontrado'),
-            {
-                status: 404,
-                code: "PRODUCT_NOT_FOUND",
-                timestamp: new Date().toISOString()
-            })
+        if(rows.length===0) {
+            throw createError('Producto no encontrado', 404, 'PRODUCT_NOT_FOUND');
         }
 
         return res.status(200).json( rows[0] );
@@ -56,25 +33,17 @@ const getProductById = async (req, res) => {
 
 const getProductsByQuery = async (req, res) => {
     try {
-        const { conditions, values } = searchProductByQuery(req.query);
-        if(!conditions)
-        {
-            throw Object.assign( new Error('No se encontraron parametros'),
-            {
-                status: 400,
-                code: "MISSING_SEARCHING_PARAMETERS",
-                timestamp: new Date().toISOString()
-            })
-        }
+        const { queryFilters, values} = searchProductQuery(req.query);
 
-        const query = `SELECT * FROM products WHERE ${conditions.join(' AND ')}`;
+        const searchQuery = `SELECT ${validation.productFields} FROM products WHERE ${queryFilters}`;
         
-        const [ rows ] = await req.pool.query(query, values);
+        const [ rows ] = await req.pool.query(searchQuery, values);
 
         return res.status(200).json( rows );
     } catch(error) {
-        console.error("Error en /products/search?query:", error);
-        return res.status(error.status||500).json( { error: error.code||error } );
+        console.error("Error buscando productos por query:", error.code || error);
+        
+        return res.status(error.status||500).json( { error: error.message||error } );
     }
 }
 

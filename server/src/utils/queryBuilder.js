@@ -2,6 +2,7 @@ const { isValidUUID } = require("./validations");
 const validation = require('./validations');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const createError = require("./errorBuilder");
 
 /*REFACTOR*/
 //Post query builders
@@ -18,20 +19,13 @@ const postQueryBuilder = (allowedParams) => (queries) => {
         }
     }
 
-    return { columns, placeholders, values };
+    let columnsQuery = columns.join(', ');
+
+    return { columnsQuery, placeholders, values };
 }
 
 const postClientQueryBuilder = async (queries) => {
-    if(Object.keys(queries).length===0) {
-        throw Object.assign( new Error('No se recibió nada por body'),
-        {
-            status: 400,
-            code: 'RECEIVED_AN_EMPTY_BODY',
-            timestamp: new Date().toISOString()
-        })
-    }
-
-    const mandatoryColumns = [ 'business_name', 'password', 'tax_id', 'email', 'password' ];
+    const mandatoryColumns = [ 'business_name', 'tax_id', 'email', 'password' ];
     const optionalColumns = [ 'phone', 'address', 'contact_name', 'contact_phone', 'verification_token' ];
 
     checkMandatoryColumns(mandatoryColumns, queries);
@@ -52,15 +46,20 @@ const postClientQueryBuilder = async (queries) => {
     return builder(queries);
 }
 
+const postProductQueryBuilder = (queries) => {
+    const mandatoryColumns = [ 'sku', 'name', 'category', 'unit_price' ];
+    const optionalColumns = [ 'description', 'stock', 'is_active' ];
+
+    checkMandatoryColumns(mandatoryColumns, queries);
+
+    const builder = postQueryBuilder([...mandatoryColumns, ...optionalColumns]);
+    return builder(queries);
+}
+
 //GET by Query Builders
 const getByQueryBuilder = (allowedFilters) => (queries) => {
     if(Object.keys(queries).length===0) {
-    throw Object.assign( new Error('No se recibió nada por body'),
-        {
-            status: 400,
-            code: 'RECEIVED_AN_EMPTY_BODY',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('No se recibió nada por body', 400, 'RECEIVED_AN_EMPTY_BODY');
     }
 
     const filters = [];
@@ -74,12 +73,7 @@ const getByQueryBuilder = (allowedFilters) => (queries) => {
     }
 
     if(filters.length===0) {
-        throw Object.assign( new Error('Sin filtros válidos'),
-        {
-            status: 400,
-            code: 'NO_VALID_FILTERS_TO_SEARCH',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Sin filtros válidos', 400, 'NO_VALID_FILTERS_TO_SEARCH');
     }
 
     const queryFilters = filters.join(' AND ');
@@ -87,17 +81,13 @@ const getByQueryBuilder = (allowedFilters) => (queries) => {
     return { queryFilters, values };
 }
 
-const searchClientsQuery = getByQueryBuilder(['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id"]);
+const searchClientsQuery = getByQueryBuilder(['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id", "is_admin"]);
+const searchProductQuery = getByQueryBuilder(['sku', 'name', 'description', 'category', 'unit_price', 'stock', 'reserved_stock', 'is_active']);
 
 //UPDATE Builders
 const updateQueryBuilder = (allowedParams) => (queries) => {
     if(Object.keys(queries).length===0) {
-        throw Object.assign( new Error('No se recibió nada por body'),
-        {
-            status: 400,
-            code: 'RECEIVED_AN_EMPTY_BODY',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('No se recibió nada por body', 400, 'RECEIVED_AN_EMPTY_BODY');
     }
 
     const conditions = [];
@@ -111,31 +101,27 @@ const updateQueryBuilder = (allowedParams) => (queries) => {
     }
 
     if(conditions.length===0) {
-        throw Object.assign( new Error('Sin condiciones para actualizar'),
-        {
-            status: 400,
-            code: 'NO_VALID_CONDITIONS_TO_UPDATE',
-            timestamp: new Date().toISOString()
-        })
+        throw createError('Sin condiciones para actualizar', 400, 'NO_VALID_CONDITIONS_TO_UPDATE');
     }
 
-    return { conditions, values };
+    const conditionsQuery = conditions.join(', ');
+
+    //Check this: reemplazar conditionsQuery en sus invocaciones
+    // const conditionsQuery = conditions.join(', ');
+
+    return { conditionsQuery, values };
 }
 
 const updateClientBuilder = updateQueryBuilder([ 'phone', 'address', 'contact_name', 'contact_phone' ]);
+const updateProductBuilder = updateQueryBuilder([ 'name', 'description', 'unit_price', 'stock', 'reserved_stock' ]);
 
 //Helpers
 const checkMandatoryColumns = (mandatoryColumns, queries) => {
     const missingFields = mandatoryColumns.filter( field => !(field in queries));
     if(missingFields.length>0) {
-        throw Object.assign( new Error(`Faltan campos obligatorios: ${missingFields.join(', ')}`),
-        {
-            status: 400,
-            code: "MISSING_REQUIRED_FIELDS",
-            missingFields,
-            timestamp: new Date().toISOString()
-        })
+        createError(`Faltan campos obligatorios: ${missingFields.join(', ')}`, 400, 'MISSING_REQUIRED_FIELDS', missingFields);
     }
+    
     return true;
 }
 
@@ -156,21 +142,21 @@ const queryBuilder = (queries) => {
     return { conditions, values };
 }
 
-const updateQueryBuilder = (queries) => {
-    const allowedColumns = [ 'phone', 'address', 'contact_name', 'contact_phone' ];
+// const updateQueryBuilder = (queries) => {
+//     const allowedColumns = [ 'phone', 'address', 'contact_name', 'contact_phone' ];
 
-    const conditions = [];
-    const values = [];
+//     const conditions = [];
+//     const values = [];
 
-    for( const [key, value] of Object.entries(queries) ) {
-        if(allowedColumns.includes(key)) {
-            conditions.push(`${key} = ?`);
-            values.push(value);
-        }
-    }
+//     for( const [key, value] of Object.entries(queries) ) {
+//         if(allowedColumns.includes(key)) {
+//             conditions.push(`${key} = ?`);
+//             values.push(value);
+//         }
+//     }
 
-    return { conditions, values };
-}
+//     return { conditions, values };
+// }
 
 const productQueryBuilder = (queries) => {
     const allowedColumns = [
@@ -398,9 +384,9 @@ const invoiceByQueryBuilder =(queries) =>
 }
 
 module.exports = {
-    postClientQueryBuilder,
-    searchClientsQuery,
-    updateClientBuilder,
+    postClientQueryBuilder, postProductQueryBuilder,
+    searchClientsQuery, searchProductQuery,
+    updateClientBuilder, updateProductBuilder,
     queryBuilder, updateQueryBuilder,
     productQueryBuilder, searchProductByQuery, updateProductQuery,
     invoiceByQueryBuilder };
