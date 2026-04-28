@@ -1,3 +1,4 @@
+const createError = require('../../utils/errorBuilder');
 const validations = require('../../utils/validations');
 
 const postInvoice = async (req, res) => {
@@ -11,65 +12,39 @@ const postInvoice = async (req, res) => {
         const { product_id, quantity } = req.body;
         const { id } = req.client;
 
-        if(quantity<=0)
-        {
-            throw Object.assign( new Error('La cantidad debe ser mayor que cero'),
-            {
-                status: 400,
-                code: "INVALID_QUANTITY",
-                timestamp: new Date().toISOString()
-            })
+        if(quantity<=0) {
+            throw createError('La cantidad debe ser mayor que cero', 400, 'INVALID_QUANTITY');
         }
 
         validations.validateId(product_id);
 
         const [existingDraft] = await connection.query(`SELECT id FROM invoices WHERE client_id = ? AND status = "draft"`, [id]);
         if(existingDraft.length>0) {
-            throw Object.assign( new Error('El cliente ya tiene un invoice activo'),
-            {
-                status: 409,
-                code: "DRAFT_ALREADY_EXISTS",
-                timestamp: new Date().toISOString(),
-                details: { existingDraftId: existingDraft[0].id }
-            })
+            throw createError('El cliente ya tiene un invoice activo', 409, 'DRAFT_ALREADY_EXISTS', { details: { existingDraftId: existingDraft[0].id} });
         }
 
         await connection.query('INSERT INTO invoices (client_id) VALUES (?)', [id]);
         const [rows] = await connection.query("SELECT id FROM invoices WHERE client_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 1", [id]);
-        if(rows.length===0)
-        {
-            throw Object.assign( new Error('Error buscando registro'),
-            {
-                status: 404,
-                code: 'MISSING_INVOICE',
-                timestamp: new Date().toISOString()
-            })
+        if(rows.length===0) {
+            throw createError('Invoice no encontrado', 404, 'INVOICE_NOT_FOUND');
         }
 
         const [productInfo] = await connection.query('SELECT unit_price, stock, reserved_stock FROM products WHERE id = ?', [product_id]);
-        if(productInfo.length===0)
-        {
-            throw Object.assign( new Error('Error encontrando el precio del producto'),
-            {
-                status: 404,
-                code: 'MISSING_PRODUCT_PRICE',
-                timestamp: new Date().toISOString()
-            })
+        if(productInfo.length===0) {
+            throw createError('Producto no encntrado', 404, 'MISSING_PRODUCT_PRICE');
         }
 
         const realStock = productInfo[0].stock - productInfo[0].reserved_stock;
         if(realStock-quantity < 0) {
-            throw Object.assign( new Error('No hay suficiente stock del producto seleccionado'),
-            {
-                status: 409,
-                code: "INSUFFICIENT_STOCK",
-                timestamp: new Date().toISOString(),
-                details: {
-                    productId,
-                    requestedQuantity: quantity,
-                    availableStock: realStock
+            throw createError('No hay suficiente stock del producto seleccionado', 409, 'INSUFFICIENT_STOCK',
+                { details:
+                    {
+                        productId,
+                        requestedQuantity: quantity,
+                        availableStock: realStock
+                    }
                 }
-            })
+            )
         }
 
         const subtotal = productInfo[0].unit_price * quantity;
@@ -78,21 +53,15 @@ const postInvoice = async (req, res) => {
             [rows[0].id, product_id, quantity, productInfo[0].unit_price, subtotal]
         )
 
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('No se creó la relacional'),
-            {
-                status: 400,
-                code: "ERROR_CREATING_INVOICE_ITEM",
-                timestamp: new Date().toISOString()
-            })
+        if(result.affectedRows===0) {
+            throw createError('No se creó la relacional', 400, 'ERROR_CREATING_INVOICE_ITEM');
         }
 
         await connection.commit();
 
         return res.status(201).json( {invoiceId: rows[0].id} );
     } catch(error) {
-        console.error( "Error posteando invoice:", error.code || error );
+        console.error( "Error creando invoice:", error.code || error );
         if(connection) await connection.rollback()
         return res.status(error.status||500).json( {error: error.message || error} );
     } finally {

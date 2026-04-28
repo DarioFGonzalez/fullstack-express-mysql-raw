@@ -4,7 +4,7 @@ const validation = require('../../utils/validations');
 
 const getAllInvoices = async (req, res) => {
     try {
-        const [invoices] = await req.pool.query('SELECT * FROM invoices');
+        const [invoices] = await req.pool.query(`SELECT ${validation.invoiceFields} FROM invoices`);
 
         return res.status(200).json( invoices );
     } catch(error) {

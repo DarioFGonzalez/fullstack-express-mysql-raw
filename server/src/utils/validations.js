@@ -7,6 +7,7 @@ const tokenRegex = /^[0-9a-f]{64}$/i;
 
 const selectedFields = 'id, business_name, tax_id, email, phone, address, contact_name, contact_phone, last_login, status, is_admin';
 const productFields = 'id, sku, name, description, category, unit_price, stock, reserved_stock, is_active';
+const invoiceFields = 'id, client_id, status, issue_date, total, notes';
 
 const isValidUUID = (uuid) => {
     if(!uuid || typeof uuid !== 'string') return false;
@@ -88,7 +89,7 @@ const validateEmail = (email) => {
 }
 
 module.exports = {
-    selectedFields, productFields,
+    selectedFields, productFields, invoiceFields,
     isValidUUID, isValidEmail, isValidPassword, isValidToken,
     validateId, validateEmail, validatePassword, validatePassword, validateToken,
     validatePaymentTerms,

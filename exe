@@ -1,0 +1,215 @@
+[33mcommit 45bf8e8ba886a1c4c41a982e87fd6281e0c19bff[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Mon Apr 27 12:54:36 2026 -0300
+
+    refactor: implement functional query builders and centralized error helper
+
+[33mcommit ab83898a0fb34096b3801cd8a7f5ad7565420c14[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Apr 26 20:29:58 2026 -0300
+
+    refactor(clients): refactor client routes using helpers and validators
+
+[33mcommit 947c55b1112892a7dc3b2ad5b8292467849eb69e[m[33m ([m[1;31morigin/main[m[33m)[m
+Merge: 1ca172a 7ec7968
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sat Apr 25 11:27:59 2026 -0300
+
+    Merge branch 'main' of https://github.com/DarioFGonzalez/fullstack-express-mysql-raw
+
+[33mcommit 1ca172ae392257597250d606b2b89508fcfaa99b[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Fri Apr 24 21:57:00 2026 -0300
+
+    refactor(clients): extract post client logic to helpers & validations
+    
+    - Separate validation, hashing and token generation from handler
+    - Use generic postQueryBuilder for dynamic column/placeholder construction
+    - Improve error responses with specific HTTP codes and missing fields list
+    - Prepare structure for future entities (products, invoices) reusing same patterns
+
+[33mcommit 7ec7968f7f9ca0c44e74dba67c38666367e1d105[m
+Author: Dario Fernando Gonzalez <135393251+DarioFGonzalez@users.noreply.github.com>
+Date:   Mon Apr 13 01:19:37 2026 -0300
+
+    Update README.md
+
+[33mcommit e744fe5ef95123313e2c6b332505e89041a035e8[m
+Author: Dario Fernando Gonzalez <135393251+DarioFGonzalez@users.noreply.github.com>
+Date:   Mon Apr 13 01:12:43 2026 -0300
+
+    Revise README with project details and instructions
+    
+    Updated README to include project problem statement, key concepts, and installation instructions.
+
+[33mcommit e4fa5f3a7a5cfe9ad44176433af33d5c15f12e4b[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Apr 12 15:35:05 2026 -0300
+
+    feat(clients): add toggleAdmin endpoint to grant or revoke admin privileges
+
+[33mcommit 2add4dac2fd3a53e67eca0e9bb5710e0f815982e[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Apr 12 01:05:24 2026 -0300
+
+    docs: update README, CHANGELOG and devlog for v1.0 release
+
+[33mcommit 7aadd88e3a37ce713f7f07f3b0a3c3fa14e4e509[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Apr 12 00:23:23 2026 -0300
+
+    chore: backend v0.9 - complete clients, products and invoices modules
+
+[33mcommit d44c9d7d118161319e664313dd33c05834d45d76[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Apr 12 00:00:33 2026 -0300
+
+    refactor(invoiceRouter): testing middlewares
+
+[33mcommit bac3d0e1a61351a63353e101360430e82ed8e7f2[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Fri Apr 10 16:27:08 2026 -0300
+
+    refactor(routes): move invoice-related routes from clientsRouter to invoicesRouter to respect single responsibility principle
+
+[33mcommit 093be69532e54936ade8583bc269e74e4794f89a[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Fri Apr 10 16:10:21 2026 -0300
+
+    refactor(postInvoices): refactor handler, add transactions, use req.client id instead of recieving it from body
+
+[33mcommit 1c48473701125f97a266b599e3118f163aec59ef[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 9 15:33:13 2026 -0300
+
+    feat(products): add role-based access control with authMiddleware and adminOnly
+
+[33mcommit 7d53e48c564b89c578c1ab3fc391fd7ac1fb0128[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 9 04:08:29 2026 -0300
+
+    docs: add devlog.md update
+
+[33mcommit 527e42a8885e5229e9945d987d7643c871c82565[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 9 04:05:06 2026 -0300
+
+    feat(clients): finalize client router with authMiddleware and adminOnly protection for admin routes
+
+[33mcommit 88a0f88b4d73e5ac91ef25666b779dbade48d85e[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Wed Apr 8 00:00:03 2026 -0300
+
+    feat(clients): add separation admin/client
+
+[33mcommit 43fa05bd8440cd78390e0d38eea99a605f15c7ae[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Mon Apr 6 19:57:37 2026 -0300
+
+    docs(devlog): add client self-service module and account status flow
+
+[33mcommit 13e15939238ca5292474313e55f6daeb2f8f2c79[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Mon Apr 6 19:01:43 2026 -0300
+
+    feat(client): add self-service module with profile, invoices and account management
+
+[33mcommit 2a6e0696fc4f1ddc04f231887a248831a9126f5a[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Fri Apr 3 23:40:37 2026 -0300
+
+    feat(auth): implement JWT middleware and role-based access control (admin/client)
+
+[33mcommit f6486feb46bb9363d5c83285b54cd90126bb249d[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 21:26:13 2026 -0300
+
+    docs: fixed README.md
+
+[33mcommit 4e896c8e9dd4c97b322ebe228c6e490d87adb845[m
+Merge: 7ffacf2 ccf053d
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 21:24:34 2026 -0300
+
+    Merge branch 'main' of https://github.com/DarioFGonzalez/fullstack-express-mysql-raw
+
+[33mcommit 7ffacf2b2a6ae154be84937511b6f99c19366956[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 21:21:11 2026 -0300
+
+    feat(clients): add login endpoint with JWT and active cart detection
+
+[33mcommit ccf053d835ff4c890b3411ea1447b62dd84be466[m
+Author: Dario Fernando Gonzalez <135393251+DarioFGonzalez@users.noreply.github.com>
+Date:   Thu Apr 2 13:11:39 2026 -0300
+
+    Fix: get invoices by query text fixed to fit
+
+[33mcommit 7120840954f33cf9b354750eee47dc20e53a94b0[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 06:55:56 2026 -0300
+
+    docs: add devlog, CHANGELOG & README.md updates
+
+[33mcommit 8cbccb465a06268cc86728de23ce5a89f9b4b915[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 06:40:55 2026 -0300
+
+    feat(invoices): add cancel endpoint with stock release and status update
+
+[33mcommit ede15d92189a0e95ed1e12dfaa321f2c5ab83580[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 05:12:52 2026 -0300
+
+    feat(invoices): add pay endpoint with status validation and timestamp
+
+[33mcommit ba63cabb03bd585d117fec0007033cf17a2266cb[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Thu Apr 2 04:28:35 2026 -0300
+
+    feat(invoices): add deliver endpoint with stock update and transaction
+
+[33mcommit 4948b167c9f44502b6448d9a583bf3b0f48006b9[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Wed Apr 1 05:31:53 2026 -0300
+
+    docs: add devlog.md update
+
+[33mcommit cc88702746a959910267a42ff81f8ab8d7dc8835[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Wed Apr 1 05:20:19 2026 -0300
+
+    feat(invoices): add confirm invoice endpoint with stock reservation and transaction
+
+[33mcommit 1f61a4f2ea776deea71aacd54fa89ee6a38b492c[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Tue Mar 31 14:59:27 2026 -0300
+
+    feat(invoiceUtils): add getInvoiceWithItems helper for reusable invoice fetching
+
+[33mcommit fcbe511bef47ab64a2efe037072203c3dfa09257[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Tue Mar 31 04:41:07 2026 -0300
+
+    docs: update devlog with invoices module and improve README formatting
+
+[33mcommit c397ab7fc2cdb54988d026206f412ee1d8651a65[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Tue Mar 31 03:54:09 2026 -0300
+
+    feat(invoices): add search endpoint with range and exact filters
+
+[33mcommit c56fc6102c044e5796cea8dee9c20c5f5cb5c8f8[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Mon Mar 30 03:49:57 2026 -0300
+
+    feat(invoices): add batch update for invoice items (upsert + delete on quantity 0)
+
+[33mcommit 80a2ab65a37d9fbd5b7431b41a2882c1d210c0f1[m
+Author: DarioFGonzalez <dario.zerobyte@gmail.com>
+Date:   Sun Mar 29 15:14:12 2026 -0300
+
+    feat(updateInvoice): add route to add/modify products related to an invoice
+
+[33mcommit c98c9354baee00bb1ddee7d2b123b1c2c9c4b9b9[m
+Author: DarioFGonzalez <dario.zer
