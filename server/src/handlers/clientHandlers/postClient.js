@@ -14,6 +14,9 @@ const postClient = async (req, res) => {
         const getQuery = `SELECT id, email, business_name, tax_id, status is_admin FROM clients WHERE email = ?`;
 
         const [rows] = await req.pool.query( getQuery, [req.body.email] );
+        if(!rows || rows.length===0) {
+            throw createError('Error al recuperar el cliente creado', 'DATA_CONSISTENCY_ERROR', 500);
+        }
 
         return res.status(201).json( rows[0] );
     } catch(error) {

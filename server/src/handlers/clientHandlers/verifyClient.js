@@ -1,3 +1,4 @@
+const createError = require('../../utils/errorBuilder');
 const validation = require('../../utils/validations');
 
 const verifyMail = async (req, res) => {
@@ -5,8 +6,8 @@ const verifyMail = async (req, res) => {
         const { verification_token } = req.params;
         validation.validateToken(verification_token);
 
-        const verificationQuery =
-        `UPDATE clients
+        const verificationQuery = `
+        UPDATE clients
         SET
             status = "confirmed",
             email_verified_at = CURRENT_TIMESTAMP,
@@ -14,20 +15,14 @@ const verifyMail = async (req, res) => {
         WHERE verification_token = ? AND status = "pending"`
     
         const [result] = await req.pool.query( verificationQuery, [verification_token] );
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('Token expirado  o cuenta ya verificada'),
-            {
-                status: 400,
-                code: 'ALREADY_VERIFIED_OR_EXPIRED_TOKEN',
-                timestamp: new Date().toISOString()
-            } );
+        if(result.affectedRows===0) {
+            throw createError('Token expirado o cuenta ya verificada', 400, 'ALREADY_VERIFIED_OR_EXPIRED_TOKEN');
         }
 
         return res.status(200).json( { success: 'Mail del cliente verificado' } );
     } catch(error) {
-        console.error('Error en /clients/verifyMail: ', error);
-        return res.status(error.status || 500).json( error );
+        console.error('Error verificando email del cliente: ', error.code||error);
+        return res.status(error.status || 500).json( {error: error.message||error} );
     }
 }
 

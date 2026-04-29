@@ -119,7 +119,7 @@ const updateProductBuilder = updateQueryBuilder([ 'name', 'description', 'unit_p
 const checkMandatoryColumns = (mandatoryColumns, queries) => {
     const missingFields = mandatoryColumns.filter( field => !(field in queries));
     if(missingFields.length>0) {
-        createError(`Faltan campos obligatorios: ${missingFields.join(', ')}`, 400, 'MISSING_REQUIRED_FIELDS', missingFields);
+        throw createError(`Faltan campos obligatorios: ${missingFields.join(', ')}`, 400, 'MISSING_REQUIRED_FIELDS', missingFields);
     }
     
     return true;
@@ -292,6 +292,5 @@ module.exports = {
     postClientQueryBuilder, postProductQueryBuilder,
     searchClientsQuery, searchProductQuery,
     updateClientBuilder, updateProductBuilder,
-    queryBuilder, updateQueryBuilder,
-    productQueryBuilder, searchProductByQuery, updateProductQuery,
+    updateQueryBuilder,
     invoiceByQueryBuilder };
