@@ -24,35 +24,7 @@ const getMyProfile = require('../../handlers/clientHandlers/getMyData');
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - business_name
- *               - tax_id
- *               - email
- *               - password
- *             properties:
- *               business_name:
- *                 type: string
- *                 description: Razón social completa o nombre comercial legalmente registrado de la empresa cliente.
- *               tax_id:
- *                 type: string
- *                 description: Identificador fiscal único de la entidad (ej CUIT/RUT). Se utiliza para la validación de identidad y facturación.
- *               email:
- *                 type: string
- *                 description: Dirección de correo electrónico institucional. Actúa como identificador de acceso y canal principal de notificaciones legales.
- *               password:
- *                 type: string
- *                 format: password
- *                 description: Contraseña de acceso al sistema. Debe ser almacenada mediante hashing y cumplir con políticas de seguridad.
- *               phone:
- *                 type: string 
- *                 description: Línea telefónica principal de contacto de la organización.
- *               address:
- *                 type: string
- *                 description: Domicilio fiscal o dirección de contacto de la organización.
- *               contact_name:
- *                 type: string
- *                 description: Nombre y apellido de la persona de contacto designada o representante administrativo.
+ *             $ref: '#/components/schemas/postClient'
  *           examples:
  *               solo_datos_necesarios:
  *                 summary: ✔ Enviamos solo datos necesarios.
@@ -407,30 +379,7 @@ clientsRouter.use(authMiddleware);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 business_name:
- *                   type: string
- *                 tax_id:
- *                   type: string
- *                 email:
- *                   type: string
- *                 phone:
- *                   type: string
- *                 address:
- *                   type: string
- *                 contact_name:
- *                   type: string
- *                 contact_phone:
- *                   type: string
- *                 last_login:
- *                   type: string
- *                 status:
- *                   type: string
- *                 is_admin:
- *                   type: integer
+ *               $ref: '#/components/schemas/Client'
  *             example:
  *                 id: 08ed9059-26f3-11f1-bf6b-e4fd45b45662
  *                 business_name: Alpine TECH
@@ -523,6 +472,80 @@ clientsRouter.use(authMiddleware);
  */
 
 clientsRouter.get('/me', getMyProfile);
+
+/**
+ * @swagger
+ * /clients/me:
+ *   patch:
+ *     summary: Actualiza datos no críticos del cliente.
+ *     description: Enviamos por body los datos a cambiar, usamos el id del cliente logeado como punto de referencia.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/updateClient'
+ *           examples:
+ *               cambiar_valores_permitidos:
+ *                 summary: ✔ Cambiamos valores permitidos.
+ *                 value:
+ *                   phone: 0800-123-3030
+ *                   address: Wallaby 42, Sydney.
+ *                   contact_name: P. Sherman
+ *                   contact_phone: 1557493021
+ *               enviar_valores_mixtos:
+ *                 summary: ⚠ Enviamos valores inválidos.
+ *                 description: Cualquier valor no permitido será ignorado, mientras la petición tenga un valor válido la actualización tendrá lugar.
+ *                 value:
+ *                   city: Tigre
+ *                   province: Buenos Aires
+ *                   country: Argentina
+ *                   address: Constitución 911
+ *               enviar_solo_valores_inválidos:
+ *                 summary: ✖ Enviamos solo valores inválidos.
+ *                 description: Enviar solo valores no permitidos para actualización devolverá un mensaje de error.
+ *                 value:
+ *                   name: Dario F. Gonzalez
+ *                   stack: PERN
+ *                   experience: 3+ Years
+ *                   actual_status: Freelancer
+ *                   github: github.com/DarioFGonzalez
+ *                   ready_to_work: true
+ *               enviar_body_vacío:
+ *                 summary: ✖ Enviamos un body vacío.
+ *                 description: Enviar un body vacío devolverá un mensaje de error.
+ *                 value: {}
+ *     responses:
+ *       200:
+ *         description: Devuelve el registro completo del cliente actualizado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Client'
+ *             example:
+ *                 id: 08ed9059-26f3-11f1-bf6b-e4fd45b45662
+ *                 business_name: Alpine TECH
+ *                 tax_id: 25-930201-3
+ *                 email: Alpine@consultas.com
+ *                 phone: 0800-123-3030
+ *                 address: Wallaby 42, Sydney.
+ *                 contact_name: P. Sherman
+ *                 contact_phone: 1557493021
+ *                 last_login: null
+ *                 status: pending
+ *                 is_admin: 0
+ *       400:
+ *         description: No encontramos datos válidos para cambiar.
+ *       404:
+ *         description: No se encontró un cinema con esa ID en la base de datos.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+
 clientsRouter.patch('/me', updateMyProfile);
 clientsRouter.patch('/me/change-password', changeMyPassword);
 
