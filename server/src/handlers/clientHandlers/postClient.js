@@ -11,7 +11,7 @@ const postClient = async (req, res) => {
 
         await req.pool.query( insertQuery, values );
 
-        const getQuery = `SELECT id, email, business_name, tax_id, status is_admin FROM clients WHERE email = ?`;
+        const getQuery = `SELECT id, email, business_name, tax_id, status, is_admin FROM clients WHERE email = ?`;
 
         const [rows] = await req.pool.query( getQuery, [req.body.email] );
         if(!rows || rows.length===0) {

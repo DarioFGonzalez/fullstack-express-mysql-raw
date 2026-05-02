@@ -1,10 +1,13 @@
 const server = require('./src/server');
 const pool = require('./src/config/db');
+const { initializeDatabase } = require('./src/config/init-db');
 const PORT = 5000;
 
 async function startServer() {
     try {
         const [result] = await pool.query('SELECT 1 as connected');
+
+        await initializeDatabase();
 
         server.listen( PORT, () => console.log(`servidor conectado en puerto ${PORT}`) );
     }
