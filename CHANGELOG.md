@@ -25,6 +25,8 @@
 - Real webhook integration (MercadoPago)
 - Frontend dashboard
 
+---
+
 ## [Invoices Module] - 2026-04-02
 
 ### Schema
@@ -145,11 +147,13 @@
 - `connection.release()` always in `finally` block for transaction handlers
 
 ### Next Steps
-- [ ] JWT authentication with middleware
-- [ ] Role-based access (admin / client)
+- [x] JWT authentication with middleware
+- [x] Role-based access (admin / client)
 - [ ] Pagination for list endpoints
 - [ ] Demo script or Thunder Client collection
 - [ ] Frontend dashboard (optional)
+
+---
 
 ## [Products Module] - 2026-03-25
 
@@ -202,9 +206,9 @@
   - `updateProductQuery` → conditions and values for partial updates
 
 ### Next Steps
-- [ ] Carts module (carts + cart_items)
-- [ ] Orders and Invoices
-- [ ] JWT authentication
+- [x] JWT authentication
+- [x] Invoices with invoice_items
+- [ ] Pagination for list endpoints
 
 ### Notes
 - All queries use parameterized placeholders (SQL injection safe)
@@ -261,8 +265,8 @@
 
 ### Next Steps
 - [x] Products module (table + CRUD)
-- [ ] Invoices with invoice_items
-- [ ] JWT authentication for admin endpoints
+- [x] Invoices with invoice_items
+- [x] JWT authentication for admin endpoints
 
 ### Notes
 - All updates use parameterized queries (SQL injection safe)

@@ -1,5 +1,37 @@
 # Devlog
 
+## [Swagger Documentation] 2026-05-02
+
+### Documentación interactiva con OpenAPI
+
+Agregué documentación Swagger a todas las rutas públicas y protegidas del módulo `clients`.
+
+#### Endpoints documentados
+
+- `POST /clients` → registro de cliente (con ejemplos de casos felices, errores, body vacío)
+- `GET /clients/me/verify/{token}` → verificación de email
+- `POST /clients/login` → autenticación
+- `GET /clients/me` → perfil del usuario autenticado
+- `PATCH /clients/me` → actualizar datos no críticos
+
+#### Schemas reutilizables
+
+Definí schemas en `components/schemas` para evitar repetir estructuras:
+
+- `Client` → estructura completa del cliente (lo que devuelve la API)
+- `postClient` → campos requeridos para registrar un cliente
+- `updateClient` → campos permitidos para actualización
+
+#### Autenticación en Swagger
+
+Configuré `securitySchemes` con `bearerAuth`. En la UI aparecen ejemplos de token de cliente y admin, con descripción copiable.
+
+#### Por hacer
+
+- Documentar endpoints de `products`
+- Documentar endpoints de `invoices`
+- Unificar criterios de `examples` vs `example`
+  
 ## [PROJECT v1.0] - 2026-04-12
 
 ### Backend terminado
