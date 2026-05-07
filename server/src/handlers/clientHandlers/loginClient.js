@@ -23,6 +23,13 @@ const loginClient = async (req, res) => {
         
         delete client[0].password;
 
+        const updateLastLoginQuery = `
+        UPDATE clients
+        SET last_login = CURRENT_TIMESTAMP
+        WHERE id = ?`;
+
+        await req.pool.query(updateLastLoginQuery, [client[0].id]);
+
         const token = jwt.sign( client[0], process.env.JWT_SECRET, {expiresIn: '7d'} );
         return res.status(200).json( { token } );
     } catch(error) {

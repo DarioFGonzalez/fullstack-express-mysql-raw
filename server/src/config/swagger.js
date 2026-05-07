@@ -6,7 +6,21 @@ const options = {
         info: {
             title: 'B2B Stock reserve API',
             version: '1.0.0',
-            description: 'REST API para manejo mayorista de stock, facturas e inventario.',
+            description: 
+            'Este es el motor de una plataforma B2B enfocada en lo importante: gestionar clientes, inventario y facturación de forma atómica.\n\n' +
+            '### 🛠️ Stack y Enfoque\n' +
+            'Para este proyecto decidí ir por un camino más artesanal y sólido:\n' +
+            '* **Base de Datos:** MySQL usando **Raw Queries**. Sin ORMs; las consultas están escritas con builders personalizados para tener control total sobre performance y estructura de datos.\n' +
+            '* **Seguridad:** Autenticación con JWT, roles de usuario y lógica de estados (Activo, Inactivo, Pendiente).\n' +
+            '* **Documentación:** Swagger para cada ruta. Cada una con ejemplos de éxito, errores y edge cases además de todos los errores con sus ejemplos y schemas debidamente documentados.\n\n' +
+            '---\n\n' +
+            '### 🔑 Guía de Accesos\n' +
+            'Cada ruta tiene un icono en su descripción inicial para saber que necesitas para usarla sin tener que leer todo el flujo:\n\n' +
+            '* **👥 Acceso Público:** Rutas abiertas (Login, Registro, etc.).\n' +
+            '* **🔒 Requiere Token:** Para clientes logueados. Tenés que pasar el `Bearer Token` en los headers.\n' +
+            '* **🔧 Solo Admin:** Rutas de gestión crítica, exclusivas para usuarios con privilegios de administrador.\n\n' +
+            '---\n' +
+            '**Desarrollado por Darío González, full stack web developer amante del código.**',
             contact: {
                 name: 'Dario Fernando Gonzalez',
                 email: 'dario.zerobyte@gmail.com'
@@ -155,7 +169,7 @@ const options = {
                     scheme: 'bearer',
                     bearerFormat: 'JWT',
                     description: `
-                    ### 🔐 Autenticación JWT
+                    ### 🔒 Autenticación JWT
 
                     Usá uno de los siguientes tokens para probar:
 

@@ -77,14 +77,9 @@ const deactivateMySelf = async (req, res) =>
 {
     try {
         const {id} = req.client;
-        validation.validateId(id);
+
         if(req.client.status!=='active') {
-            throw Object.assign( new Error('El cliente no está activo'),
-            {
-                status: 403,
-                code: 'FORBIDDEN_ACCOUNT_NOT_ACTIVE',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('El cliente no está activo', 403, 'FORBIDDEN_ACCOUNT_NOT_ACTIVE');
         }
 
         const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -100,17 +95,11 @@ const deactivateMySelf = async (req, res) =>
 
         const [result] = await req.pool.query( deactivationQuery, values );
 
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: 'CLIENT_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+        if(result.affectedRows===0) {
+            throw createError('No se pudo actualizar el estado del cliente', 500, 'DATA_CONSISTENCY_ERROR');
         }
 
-        res.status(200).json( { message: 'Estado del cliente actualizado' } );
+        return res.status(200).json( { message: 'Estado del cliente actualizado' } );
         } catch(error) {
         console.error( 'Error desactivando cliente:', error.code || error );
         return res.status(error.status||500).json( {error: error.message||error} );

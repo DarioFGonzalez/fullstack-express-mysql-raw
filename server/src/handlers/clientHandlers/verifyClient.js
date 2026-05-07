@@ -28,17 +28,11 @@ const verifyMail = async (req, res) => {
 
 const sendReactivationMail = async (req, res) => {
     const { id } = req.client;
-    validation.validateId(id);
 
     try {
         const [rows] = await req.pool.query('SELECT verification_token FROM clients WHERE id = ?', [id]);
         if(rows.length===0) {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: 'CLIENT_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('No se pudo traer el cliente de base de datos', 500, 'DATA_INCONSISTENCY_ERROR');
         }
 
         const token = rows[0].verification_token;
@@ -58,15 +52,6 @@ const reactivateMyAccount = async (req, res) => {
         const { verification_token } = req.params;
         validation.validateToken(verification_token);
 
-        if(req.client.status!=='inactive') {
-            throw Object.assign( new Error('El cliente no está inactivo'),
-            {
-                status: 403,
-                code: 'FORBIDDEN_ACCOUNT_ACTIVE',
-                timestamp: new Date().toISOString()
-            })
-        }
-
         const verificationQuery =
         `UPDATE clients
         SET
@@ -75,17 +60,11 @@ const reactivateMyAccount = async (req, res) => {
         WHERE verification_token = ? AND status = "inactive"`
     
         const [result] = await req.pool.query( verificationQuery, [verification_token] );
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('Token expirado o cuenta activa.'),
-            {
-                status: 400,
-                code: 'ALREADY_ACTIVE_OR_EXPIRED_TOKEN',
-                timestamp: new Date().toISOString()
-            } );
+        if(result.affectedRows===0) {
+            throw createError('Token inválido o cliente ya activo', 400, 'INVALID_TOKEN_OR_ACTIVE_ACCOUNT');
         }
 
-        return res.status(200).json( { success: 'Cliente activado' } );
+        return res.status(200).json( { message: 'Estado del cliente actualizado' } );
     } catch(error) {
         console.error('Error en /client/reactivateMySelf:', error.code||error);
         return res.status(error.status || 500).json( {error: error.message||error} );

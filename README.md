@@ -8,7 +8,7 @@
 ![Stock](https://img.shields.io/badge/feature-reserved--stock-orange)
 ![MySQL](https://img.shields.io/badge/MySQL-raw--queries-4479A1)
 
-**⚡ 30+ endpoints | 🔐 JWT + roles | 📦 Reserved stock | 💰 Invoice lifecycle**
+**⚡ 30+ endpoints | 🔒 JWT + roles | 📦 Reserved stock | 💰 Invoice lifecycle**
 
 </div>
 
@@ -69,7 +69,7 @@ src/
 
 ---
 
-## 🔐 Autenticación y autorización
+## 🔒 Autenticación y autorización
 
 - **JWT** para proteger rutas sensibles
 - **`authMiddleware`** → verifica token y busca el estado actual del cliente en DB

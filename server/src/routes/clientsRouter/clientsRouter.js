@@ -15,7 +15,7 @@ const getMyProfile = require('../../handlers/clientHandlers/getMyData');
  * @swagger
  * /clients:
  *   post:
- *     summary: (Público) Crear un nuevo registro de cliente.
+ *     summary: (👥) Crear un nuevo registro de cliente.
  *     description: Crea un nuevo registro de cliente con los datos enviados.
  *     tags:
  *       - Clients
@@ -184,7 +184,7 @@ clientsRouter.post('/', postClient);
  * @swagger
  * /clients/me/verify/{verification_token}:
  *   get:
- *     summary: Verificamos el cliente mediante un token único.
+ *     summary: (👥) Verificamos el cliente mediante un token único.
  *     operationId: verifyClient
  *     description: Si el token coincide con el del cliente y la cuenta está en estado 'pendiente', la actualizamos a 'confirmada' y borramos el token.
  *     tags:
@@ -261,7 +261,7 @@ clientsRouter.get('/me/verify/:verification_token', verifyMail);
  * @swagger
  * /clients/login:
  *   post:
- *     summary: (Público) Log in para clientes.
+ *     summary: (👥) Log in para clientes.
  *     description: Recibimos email y contraseña por body, recibimos un JWToken si las credenciales son correctas.
  *     tags:
  *       - Clients
@@ -372,6 +372,61 @@ clientsRouter.get('/me/verify/:verification_token', verifyMail);
 
 clientsRouter.post('/login', loginClient);
 
+/**
+ * @swagger
+ * /clients/me/reactivate/{verification_token}:
+ *   patch:
+ *     summary: (👥) Reactivamos la cuenta del cliente.
+ *     description: Usamos el token de verificación para buscar el cliente y actualizar su estado a 'active', borrando el token en el proceso (NULL).
+ *     tags:
+ *       - Clients
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando el cambio de estado del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *             example:
+ *                 message: Estado del cliente actualizado
+ *       400:
+ *         description: Token con formato inválido, no recibido, no correponde a ningún cliente ó el cliente ya está activo.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               token_no_recibido:
+ *                  summary: ✖ No se recibió token
+ *                  value:
+ *                    error: Token no recibido
+ *                    code: TOKEN_REQUIRED
+ *               token_con_formato_inválido:
+ *                  summary: ✖ Token con formato inválido
+ *                  value:
+ *                    error: Formato del token inválido
+ *                    code: INVALID_TOKEN_FORMAT
+ *               token_inválido_o_cliente_activo:
+ *                  summary: ✖ Token inválido o cliente activo
+ *                  value:
+ *                    error: Token inválido o cliente ya activo
+ *                    code: INVALID_TOKEN_OR_ACTIVE_CLIENT
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
+clientsRouter.patch('/me/reactivate/:verification_token', reactivateMyAccount)
+
 //Client routes
 clientsRouter.use(authMiddleware);
 
@@ -379,7 +434,7 @@ clientsRouter.use(authMiddleware);
  * @swagger
  * /clients/me:
  *   get:
- *     summary: (Token required) Entrega los datos del usuario logeado.
+ *     summary: (🔒) Entrega los datos del usuario logeado.
  *     description: Entrega los datos básicos del usuario logeado utilizando el token de autorización enviado por headers.
  *     tags:
  *       - Clients
@@ -489,7 +544,7 @@ clientsRouter.get('/me', getMyProfile);
  * @swagger
  * /clients/me:
  *   patch:
- *     summary: Actualiza datos no críticos del cliente.
+ *     summary: (🔒) Actualiza datos no críticos del cliente.
  *     description: Enviamos por body los datos a cambiar, usamos el id del cliente logeado como punto de referencia.
  *     tags:
  *       - Clients
@@ -592,10 +647,12 @@ clientsRouter.patch('/me', updateMyProfile);
  * @swagger
  * /clients/me/change-password:
  *   patch:
- *     summary: Actualiza la contraseña del cliente logeado.
+ *     summary: (🔒) Actualiza la contraseña del cliente logeado.
  *     description: Utiliza el token de seguridad para identificar al cliente. Recibe la contraseña actual y la nueva por body, checkea credenciales y reemplaza la contraseña por la nueva (hasheada) en el registro del cliente.
  *     tags:
  *       - Clients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -704,9 +761,100 @@ clientsRouter.patch('/me', updateMyProfile);
 
 clientsRouter.patch('/me/change-password', changeMyPassword);
 
+/**
+ * @swagger
+ * /clients/me/deactivate:
+ *   patch:
+ *     summary: (🔒) Desactiva la cuenta del cliente logeado.
+ *     description: Cambia el estado actual de la cuenta del cliente de 'active' a 'inactive'.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando la actualización de estado exitosa.
+ *         content:
+ *           application/json:
+ *             schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *             example:
+ *                 message: Estado del cliente actualizado
+ *       403:
+ *         description: El usuario no aparece como 'active' en la base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: El cliente no está activo.
+ *               code: FORBIDDEN_ACOUNT_NOT_ACTIVE
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_se_actualizó_el_estado:
+ *                  summary: ✖ No se pudo actualizar el estado del cliente
+ *                  value:
+ *                    error: No se pudo actualizar el estado del cliente
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.patch('/me/deactivate', deactivateMySelf);
+
+/**
+ * @swagger
+ * /clients/me/reactivate:
+ *   post:
+ *     summary: (🔒) Envía un correo de reactivación al cliente.
+ *     description: Envía al correo del cliente un mail que contiene un botón para actualizar el estado de su cuenta.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando el envío del correo de reactivación.
+ *         content:
+ *           application/json:
+ *             schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *             example:
+ *                 message: Mail de reactivación enviado
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_se_actualizó_el_estado:
+ *                  summary: ✖ No se pudo traer los datos del cliente
+ *                  value:
+ *                    error: No se pudo traer el cliente de base de datos
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.post('/me/reactivate', sendReactivationMail);
-clientsRouter.patch('/me/reactivate/:verification_token', reactivateMyAccount)
 
 //Admin routes
 clientsRouter.use(adminOnly);
