@@ -69,7 +69,15 @@ const getMyProfile = require('../../handlers/clientHandlers/getMyData');
  *                   address: Gral Espejo 421
  *     responses:
  *       201:
- *         description: Registro de cliente creado exitosamente, se devuelven los datos del nuevo registro.
+ *         description: |
+ *           ### ✅ Cliente creado con éxito
+ *           
+ *           Sigue estos pasos para verificar la cuenta:
+ *           
+ *           1. **Copia** el `verification_token` que aparece en el cuerpo de esta respuesta.
+ *           2. **Haz click** en el siguiente enlace para ir al validador:
+ *              [IR A VERIFICAR EMAIL](#operations-Clients-verifyClient)
+ *           3. **Pega** el token en el campo correspondiente y presiona *Execute*.
  *         content:
  *           application/json:
  *             schema:
@@ -87,6 +95,8 @@ const getMyProfile = require('../../handlers/clientHandlers/getMyData');
  *                   type: string
  *                 is_admin:
  *                   type: integer
+ *                 verification_token:
+ *                   type: string
  *             example:
  *               id: 08ed9059-26f3-11f1-bf6b-e4fd45b45662
  *               email: Alpine@consultas.com
@@ -94,6 +104,7 @@ const getMyProfile = require('../../handlers/clientHandlers/getMyData');
  *               tax_id: 25-930201-3
  *               status: pending
  *               is_admin: 0
+ *               verification_token: 96b9fc202999f7f65c03280ee21505444edb2ec2168a5e36a08f3abae30273e0
  *       400:
  *         description: Faltan campos obligatorios o se enviaron valores con formato inválido.
  *         content:
@@ -173,7 +184,8 @@ clientsRouter.post('/', postClient);
  * @swagger
  * /clients/me/verify/{verification_token}:
  *   get:
- *     summary: (Público) Confirmamos el mail del cliente.
+ *     summary: Verificamos el cliente mediante un token único.
+ *     operationId: verifyClient
  *     description: Si el token coincide con el del cliente y la cuenta está en estado 'pendiente', la actualizamos a 'confirmada' y borramos el token.
  *     tags:
  *       - Clients
@@ -539,14 +551,157 @@ clientsRouter.get('/me', getMyProfile);
  *                 status: pending
  *                 is_admin: 0
  *       400:
- *         description: No encontramos datos válidos para cambiar.
- *       404:
- *         description: No se encontró un cinema con esa ID en la base de datos.
+ *         description: No se recibió nada por body o no hay condiciones válidas para actualizar.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               body_vacío:
+ *                 summary: ⭕ Body vacío
+ *                 value:
+ *                   error: No se recibió nada por body
+ *                   code: RECEIVED_AN_EMPTY_BODY
+ *               sin_condiciones_válidas:
+ *                 summary: ⚠ Condiciones inválidas
+ *                 value:
+ *                   error: Sin condiciones para actualizar
+ *                   code: NO_VALID_CONDITIONS_TO_UPDATE
  *       500:
- *         description: Error interno del servidor.
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_conseguimos_datos_actualizados:
+ *                  summary: ✖ No se pudo traer el cliente actualizado
+ *                  value:
+ *                    error: No se pudo actualizar el cliente
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
  */
 
 clientsRouter.patch('/me', updateMyProfile);
+
+/**
+ * @swagger
+ * /clients/me/change-password:
+ *   patch:
+ *     summary: Actualiza la contraseña del cliente logeado.
+ *     description: Utiliza el token de seguridad para identificar al cliente. Recibe la contraseña actual y la nueva por body, checkea credenciales y reemplaza la contraseña por la nueva (hasheada) en el registro del cliente.
+ *     tags:
+ *       - Clients
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *           examples:
+ *               enviamos_valores_correctos_A:
+ *                 summary: ✔ Enviamos valores correctos. [Ejemplo A]
+ *                 value:
+ *                   password: admin123
+ *                   newPassword: 123admin123
+ *               enviamos_valores_correctos_B:
+ *                 summary: ✔ Enviamos valores correctos. [Ejemplo B]
+ *                 value:
+ *                   password: 123admin123
+ *                   newPassword: admin123
+ *               enviamos_valores_iguales:
+ *                 summary: 🔂 Enviamos valores idénticos.
+ *                 value:
+ *                   password: admin123
+ *                   newPassword: admin123
+ *               contraseña_actual_incorrecta:
+ *                 summary: ✖ Contraseña actual incorrecta.
+ *                 value:
+ *                   password: administradorTorre3
+ *                   newPassword: 123admin123
+ *               nueva_contraeseña_con_formato_inválido:
+ *                 summary: ✖ Formato inválido para nueva contraseña.
+ *                 value:
+ *                   password: admin123
+ *                   newPassword: 1
+ *               falta_algun_dato:
+ *                 summary: ✖ Falta algún dato.
+ *                 value:
+ *                   newPassword: 123admin123
+ *                   old_password: admin123
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando la actualización exitosa de la contraseña.
+ *         content:
+ *           application/json:
+ *             schema:
+ *              type: object
+ *              properties:
+ *                message:
+ *                  type: string
+ *             example:
+ *                 message: Contraseña actualizada exitosamente
+ *       400:
+ *         description: Falta algúna contraseña, la nueva tiene un formáto inválido o ambas contraseñas son iguales.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               falta_contraseña:
+ *                 summary: ✖ Faltan datos
+ *                 value:
+ *                   error: No se recibió una contraseña
+ *                   code: MISSING_PASSWORD_FIELD
+ *               formato_inválido:
+ *                 summary: ✖ Contraseña con formato inválido
+ *                 value:
+ *                   error: Formato de la contraseña inválido
+ *                   code: INVALID_PASSWORD_FORMAT
+ *               contraseñas_iguales:
+ *                  summary: 🔂 Ambas contraseñas son iguales
+ *                  value:
+ *                    error: La nueva contraseña debe ser diferente de la actual
+ *                    code: SAME_PASSWORD_CONFLICT
+ *       401:
+ *         description: La contraseña enviada es incorrecta, no coincide con la guardada en base de datos a este registro de cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Contraseña incorrecta
+ *               code: UNAUTHORIZED_WITHOUT_PASSWORD
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_conseguimos_datos_actualizados:
+ *                  summary: ✖ No se pudo traer el cliente actualizado
+ *                  value:
+ *                    error: Error al recuperar el cliente actualizado
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.patch('/me/change-password', changeMyPassword);
 
 clientsRouter.patch('/me/deactivate', deactivateMySelf);

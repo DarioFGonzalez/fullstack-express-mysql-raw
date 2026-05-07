@@ -183,7 +183,7 @@ async function initializeDatabase() {
         await pool.query(tables.invoices);
         await pool.query(tables.invoice_items);
         await seedTestData();
-        console.log('Base de datos inicializada correctamente con datos de prueba');
+        console.log('DDBB inyectada con dummys');
     } catch (error) {
         console.error('Error inicializando la base de datos:', error.message);
         throw error;

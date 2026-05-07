@@ -8,9 +8,7 @@ const updateMyProfile = async (req, res) =>
 {
     try {
         const { conditionsQuery, values } = updateClientBuilder(req.body);
-
-        validation.validateId(req.client.id);
-
+        
         values.push(req.client.id);
         
         const updateQuery = `UPDATE clients SET ${conditionsQuery} WHERE id = ?`;
@@ -18,7 +16,7 @@ const updateMyProfile = async (req, res) =>
         const [result] = await req.pool.query( updateQuery, values );
 
         if(result.affectedRows===0) {
-            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
+            throw createError('No se pudo actualizar el cliente', 500, 'DATA_CONSISTENCY_ERROR');
         }
 
         const [rows] = await req.pool.query( `SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [req.client.id] );
@@ -36,66 +34,36 @@ const changeMyPassword = async (req, res) =>
         const { id } = req.client;
         const {password, newPassword} = req.body;
 
-        if(!password || !newPassword)
-        {
-            throw Object.assign( new Error( 'Faltan datos requeridos'),
-            {
-                status: 400,
-                code: 'MISSING_PASSWORD_FIELDS',
-                timestamp: new Date().toISOString()
-            })
+        if(!req.body.password || !req.body.newPassword) {
+            throw createError('No se recibió una contraseña', 400, 'MISSING_PASSWORD_FIELD');
         }
 
         validation.validatePassword(newPassword);
 
         const [rows] = await req.pool.query('SELECT password FROM clients WHERE id = ?', [id]);
 
-        if(rows.length===0)
-        {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: "CLIENT_NOT_FOUND",
-                timestamp: new Date().toISOString()
-            } );
+        if(rows.length===0) {
+            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
         }
 
         const isValid = await bcrypt.compare(password, rows[0].password);
 
-        if(!isValid)
-        {
-            throw Object.assign( new Error('Contraseña incorrecta'),
-            {
-                status: 401,
-                code: "UNAUTHORIZED_WITHOUT_PASSWORD",
-                timestamp: new Date().toISOString()
-            })
+        if(!isValid) {
+            throw createError('Contraseña incorrecta', 401, 'UNAUTHORIZED_WITHOUT_PASSWORD');
         }
 
         const isSamePassword = await bcrypt.compare(newPassword, rows[0].password);
 
-        if(isSamePassword)
-        {
-            throw Object.assign( new Error('La nueva contraseña debe ser diferente de la actual'),
-            {
-                status: 400,
-                code: "SAME_PASSWORD_CONFLICT",
-                timestamp: new Date().toISOString()
-            })
+        if(isSamePassword) {
+            throw createError('La nueva contraseña debe ser diferente de la actual', 400, 'SAME_PASSWORD_CONFLICT');
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         const [result] = await req.pool.query('UPDATE clients SET password = ? WHERE id = ?', [hashedPassword, id]);
 
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('No se pudo actualizar la contraseña'),
-            {
-                status: 500,
-                code: 'UPDATE_FAILED',
-                timestamp: new Date().toISOString()
-            })
+        if(result.affectedRows===0) {
+            throw createError('Error al recuperar el cliente actualizado', 500, 'DATA_CONSISTENCY_ERROR');
         }
 
         return res.status(200).json( { message: 'Contraseña actualizada exitosamente' } );

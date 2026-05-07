@@ -140,6 +140,13 @@ const options = {
                         contact_name: { type: 'string' },
                         contact_phone: { type: 'string' }
                     }
+                },
+                errorMessage: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        code: { type: 'string' }
+                    }
                 }
             },
             securitySchemes: {
