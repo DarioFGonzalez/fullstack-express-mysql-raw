@@ -114,12 +114,7 @@ const toggleClient = async (req, res) =>
 
         const [actualStatus] = await req.pool.query('SELECT status FROM clients WHERE id = ?', [id]);
         if(actualStatus.length===0) {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: 'CLIENT_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
         }
 
         const {status} = actualStatus[0];
@@ -130,18 +125,13 @@ const toggleClient = async (req, res) =>
         }
 
         const statusList = {
-            active: `"inactive", verification_token = ?`,
-            confirmed: `"active", verification_token = NULL`,
-            inactive: `"active", verification_token = NULL`
+            active: `'inactive', verification_token = ?`,
+            confirmed: `'active', verification_token = NULL`,
+            inactive: `'active', verification_token = NULL`
         }
 
         if(!statusList[status]) {
-            throw Object.assign( new Error('Status actual no intercambiable'),
-            {
-                status: 400,
-                code: "INVALID_ACTUAL_STATUS",
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Status actual no intercambiable', 400, 'INVALID_ACTUAL_STATUS');
         }
 
         const toggleQuery =
@@ -152,14 +142,8 @@ const toggleClient = async (req, res) =>
 
         const [result] = await req.pool.query( toggleQuery, values );
 
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: 'CLIENT_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+        if(result.affectedRows===0) {
+            throw createError('El cliente desapareció durante la operación', 500, 'DATA_INCONSISTENCY_ERROR');
         }
 
         res.status(200).json( { message: 'Estado del cliente actualizado' } );
@@ -176,29 +160,22 @@ const toggleAdmin = async (req, res) => {
         validation.validateId(id);
 
         if(id===req.client.id) {
-            throw Object.assign( new Error('No puede auto-quitarse los privilegios'),
-            {
-                status: 403,
-                code: 'CANNOT_TOGGLE_OWN_PRIVILEGES',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('No puede auto-quitarse los privilegios', 403, 'CANNOT_TOGGLE_OWN_PRIVILEGES');
         }
 
         const [rows] = await req.pool.query('SELECT is_admin FROM clients WHERE id = ?', [id]);
         if(rows.length===0) {
-            throw Object.assign( new Error('Cliente no encontrado'),
-            {
-                status: 404,
-                code: "CLIENT_NOT_FOUND",
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
         }
 
         const new_privilege = rows[0].is_admin===1 ? 0 : 1;
 
-        await req.pool.query('UPDATE clients SET is_admin = ? WHERE id = ?', [new_privilege, id]);
+        const [result] = await req.pool.query('UPDATE clients SET is_admin = ? WHERE id = ?', [new_privilege, id]);
+        if(result.affectedRows===0) {
+            throw createError('El cliente desapareció durante la operación', 500, 'DATA_INCONSISTENCY_ERROR');
+        }
 
-        return res.status(200).json( {message: 'Privilegios del cliente actualizados', new_privilege} );
+        return res.status(200).json( {message: 'Privilegios del cliente actualizados'} );
     } catch(error) {
         console.error( "Error en toggleAdmin:", error.code || error);
         return res.status(error.status||500).json( { error: error.message || error } );

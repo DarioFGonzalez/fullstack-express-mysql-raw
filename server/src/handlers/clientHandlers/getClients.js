@@ -17,8 +17,8 @@ const getClientsByQuery = async (req, res) => {
     try {
         const { queryFilters, values } = searchClientsQuery(req.query);
 
-        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${queryFilters}`, [values]);
-        
+        const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE ${queryFilters}`, values);
+
         return res.status(200).json( rows );
     }
     catch(error) {
@@ -34,16 +34,19 @@ const getClientById = async (req, res) => {
         validation.validateId(id);
 
         const [rows] = await req.pool.query(`SELECT ${validation.selectedFields} FROM clients WHERE id = ?`, [id]);
-        if(rows.length===0)
-        {
-            throw Object.assign( new Error('Cliente con esa ID no encontrado en la base de datos'),
-                {
-                    status: 404,
-                    code: "CLIENT_ID_NOT_FOUND",
-                    timestamp: new Date().toISOString()
-                } );
+        if(rows.length===0) {
+            throw createError('Cliente no encontrado', 404, 'CLIENT_NOT_FOUND');
         }
-        const [facturas] = await req.pool.query(`SELECT invoices.id AS invoice_id, invoices.status AS status, invoices.issue_date AS issue_date, invoices.total AS total FROM invoices WHERE invoices.client_id = ?`, [id])
+
+        const facturasQuery = `
+        SELECT
+        invoices.id AS invoice_id,
+        invoices.status AS status,
+        invoices.issue_date AS issue_date,
+        invoices.total AS total
+        FROM invoices WHERE invoices.client_id = ?`;
+        
+        const [facturas] = await req.pool.query( facturasQuery, [id])
 
         rows[0].invoices = facturas;
 

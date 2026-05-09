@@ -30,9 +30,9 @@ invoicesRouter.post('/:id/cancel', cancelInvoice);
 //Admin routes
 invoicesRouter.use(adminOnly);
 
-invoicesRouter.get('/:id', getInvoiceById);
 invoicesRouter.get('/all', getAllInvoices);
 invoicesRouter.get('/search', getInvoicesByQuery);
+invoicesRouter.get('/:id', getInvoiceById);
 invoicesRouter.post('/:id/deliver', deliverInvoice);
 
 //Webhook

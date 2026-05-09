@@ -77,7 +77,7 @@ const tables = {
 
 async function seedTestData() {
     const hashCliente = await bcrypt.hash('test123', 10);
-    const hashAdmin = await bcrypt.hash('admin123', 10);
+    const hashAdmin = await bcrypt.hash('test123', 10);
 
     const clienteId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
     const adminId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';

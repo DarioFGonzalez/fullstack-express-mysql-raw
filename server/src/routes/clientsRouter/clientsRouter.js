@@ -182,83 +182,6 @@ clientsRouter.post('/', postClient);
 
 /**
  * @swagger
- * /clients/me/verify/{verification_token}:
- *   get:
- *     summary: (👥) Verificamos el cliente mediante un token único.
- *     operationId: verifyClient
- *     description: Si el token coincide con el del cliente y la cuenta está en estado 'pendiente', la actualizamos a 'confirmada' y borramos el token.
- *     tags:
- *       - Clients
- *     parameters:
- *      - in: path
- *        name: verification_token
- *        required: true
- *        schema:
- *          type: string
- *          example: a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890
- *        description: Token único de verificación del cliente. (32 caracteres hex)<br>Casos de prueba:<br><br>- Token válido    (Simulado)          ->  `7eff170bf6872bff6ce8d4af1c97114aa890da7fa4449554d0378d076906bec1`<br><br>- Error 401       (Formato inválido)  ->  `invalid-token-123`<br><br>- Error 400       (Requerido)         ->  ` `
- *     responses:
- *       200:
- *         description: Mail del cliente verificado. Se borra el token, se actualiza el estado a "confirmed" y devolvemos un mensaje de éxito.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: string
- *                 message:
- *                   type: string
- *             example:
- *               code: Success
- *               message: Mail del cliente verificado
- *       400:
- *         description: Se envió un token vacío, inválido o la cuenta ya fue verificada.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 code:
- *                   type: string
- *             examples:
- *               token_requerido:
- *                 summary: ✖ Token no recibido
- *                 value:
- *                   error: Token no recibido
- *                   code: TOKEN_REQUIRED
- *               token_inválido:
- *                 summary: ✖ Token con formato inválido
- *                 value:
- *                   error: Formato del token inválido
- *                   code: INVALID_TOKEN_FORMAT
- *               token_expirado_o_ya_verificado:
- *                  summary: ✖ Token ya verificado ó no encontrado en DDBB
- *                  value:
- *                    error: Token expirado o cuenta ya verificada
- *                    code: ALREADY_VERIFIED_OR_EXPIRED_TOKEN
- *       500:
- *         description: Error interno del servidor.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                 code:
- *                   type: string
- *             example:
- *               error: Error interno del servidor
- *               code: INTERNAL_SERVER_ERROR
- */
-
-clientsRouter.get('/me/verify/:verification_token', verifyMail);
-
-/**
- * @swagger
  * /clients/login:
  *   post:
  *     summary: (👥) Log in para clientes.
@@ -374,12 +297,96 @@ clientsRouter.post('/login', loginClient);
 
 /**
  * @swagger
+ * /clients/me/verify/{verification_token}:
+ *   get:
+ *     summary: (👥) Verificamos el cliente mediante un token único.
+ *     operationId: verifyClient
+ *     description: Si el token coincide con el del cliente y la cuenta está en estado 'pendiente', la actualizamos a 'confirmada' y borramos el token.
+ *     tags:
+ *       - Clients
+ *     parameters:
+ *      - in: path
+ *        name: verification_token
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890
+ *        description: Token único de verificación del cliente. (32 caracteres hex)<br>Casos de prueba:<br><br>- Token válido    (Simulado)          ->  `7eff170bf6872bff6ce8d4af1c97114aa890da7fa4449554d0378d076906bec1`<br><br>- Error 401       (Formato inválido)  ->  `invalid-token-123`<br><br>- Error 400       (Requerido)         ->  ` `
+ *     responses:
+ *       200:
+ *         description: Mail del cliente verificado. Se borra el token, se actualiza el estado a "confirmed" y devolvemos un mensaje de éxito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *             example:
+ *               code: Success
+ *               message: Mail del cliente verificado
+ *       400:
+ *         description: Se envió un token vacío, inválido o la cuenta ya fue verificada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             examples:
+ *               token_requerido:
+ *                 summary: ✖ Token no recibido
+ *                 value:
+ *                   error: Token no recibido
+ *                   code: TOKEN_REQUIRED
+ *               token_inválido:
+ *                 summary: ✖ Token con formato inválido
+ *                 value:
+ *                   error: Formato del token inválido
+ *                   code: INVALID_TOKEN_FORMAT
+ *               token_expirado_o_ya_verificado:
+ *                  summary: ✖ Token ya verificado ó no encontrado en DDBB
+ *                  value:
+ *                    error: Token expirado o cuenta ya verificada
+ *                    code: ALREADY_VERIFIED_OR_EXPIRED_TOKEN
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
+clientsRouter.get('/me/verify/:verification_token', verifyMail);
+
+/**
+ * @swagger
  * /clients/me/reactivate/{verification_token}:
  *   patch:
  *     summary: (👥) Reactivamos la cuenta del cliente.
  *     description: Usamos el token de verificación para buscar el cliente y actualizar su estado a 'active', borrando el token en el proceso (NULL).
  *     tags:
  *       - Clients
+ *     parameters:
+ *      - in: path
+ *        name: verification_token
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890
  *     responses:
  *       200:
  *         description: Devuelve un mensaje confirmando el cambio de estado del cliente.
@@ -434,7 +441,7 @@ clientsRouter.use(authMiddleware);
  * @swagger
  * /clients/me:
  *   get:
- *     summary: (🔒) Entrega los datos del usuario logeado.
+ *     summary: (👤) Entrega los datos del usuario logeado.
  *     description: Entrega los datos básicos del usuario logeado utilizando el token de autorización enviado por headers.
  *     tags:
  *       - Clients
@@ -544,7 +551,7 @@ clientsRouter.get('/me', getMyProfile);
  * @swagger
  * /clients/me:
  *   patch:
- *     summary: (🔒) Actualiza datos no críticos del cliente.
+ *     summary: (👤) Actualiza datos no críticos del cliente.
  *     description: Enviamos por body los datos a cambiar, usamos el id del cliente logeado como punto de referencia.
  *     tags:
  *       - Clients
@@ -647,7 +654,7 @@ clientsRouter.patch('/me', updateMyProfile);
  * @swagger
  * /clients/me/change-password:
  *   patch:
- *     summary: (🔒) Actualiza la contraseña del cliente logeado.
+ *     summary: (👤) Actualiza la contraseña del cliente logeado.
  *     description: Utiliza el token de seguridad para identificar al cliente. Recibe la contraseña actual y la nueva por body, checkea credenciales y reemplaza la contraseña por la nueva (hasheada) en el registro del cliente.
  *     tags:
  *       - Clients
@@ -670,33 +677,33 @@ clientsRouter.patch('/me', updateMyProfile);
  *               enviamos_valores_correctos_A:
  *                 summary: ✔ Enviamos valores correctos. [Ejemplo A]
  *                 value:
- *                   password: admin123
- *                   newPassword: 123admin123
+ *                   password: test123
+ *                   newPassword: 123test123
  *               enviamos_valores_correctos_B:
  *                 summary: ✔ Enviamos valores correctos. [Ejemplo B]
  *                 value:
- *                   password: 123admin123
- *                   newPassword: admin123
+ *                   password: 123test123
+ *                   newPassword: test123
  *               enviamos_valores_iguales:
  *                 summary: 🔂 Enviamos valores idénticos.
  *                 value:
- *                   password: admin123
- *                   newPassword: admin123
+ *                   password: test123
+ *                   newPassword: test123
  *               contraseña_actual_incorrecta:
  *                 summary: ✖ Contraseña actual incorrecta.
  *                 value:
  *                   password: administradorTorre3
- *                   newPassword: 123admin123
+ *                   newPassword: 123test123
  *               nueva_contraeseña_con_formato_inválido:
  *                 summary: ✖ Formato inválido para nueva contraseña.
  *                 value:
- *                   password: admin123
+ *                   password: test123
  *                   newPassword: 1
  *               falta_algun_dato:
  *                 summary: ✖ Falta algún dato.
  *                 value:
- *                   newPassword: 123admin123
- *                   old_password: admin123
+ *                   newPassword: 123testn123
+ *                   old_password: test123
  *     responses:
  *       200:
  *         description: Devuelve un mensaje confirmando la actualización exitosa de la contraseña.
@@ -765,7 +772,7 @@ clientsRouter.patch('/me/change-password', changeMyPassword);
  * @swagger
  * /clients/me/deactivate:
  *   patch:
- *     summary: (🔒) Desactiva la cuenta del cliente logeado.
+ *     summary: (👤) Desactiva la cuenta del cliente logeado.
  *     description: Cambia el estado actual de la cuenta del cliente de 'active' a 'inactive'.
  *     tags:
  *       - Clients
@@ -817,7 +824,7 @@ clientsRouter.patch('/me/deactivate', deactivateMySelf);
  * @swagger
  * /clients/me/reactivate:
  *   post:
- *     summary: (🔒) Envía un correo de reactivación al cliente.
+ *     summary: (👤) Envía un correo de reactivación al cliente.
  *     description: Envía al correo del cliente un mail que contiene un botón para actualizar el estado de su cuenta.
  *     tags:
  *       - Clients
@@ -859,11 +866,388 @@ clientsRouter.post('/me/reactivate', sendReactivationMail);
 //Admin routes
 clientsRouter.use(adminOnly);
 
+/**
+ * @swagger
+ * /clients/all:
+ *   get:
+ *     summary: (🔐) Entrega todos los usuarios en base de datos.
+ *     description: Entrega los datos básicos del usuario logeado utilizando el token de autorización enviado por headers.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un array con todos los clientes en base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/clientPublic'
+ *             example:
+ *               - id: 091549e9-49b1-11f1-acdd-507b9d97da6f
+ *                 business_name: Freelance mayhem SA
+ *                 tax_id: 25-36999123-1
+ *                 email: FreeMay@consultas.com
+ *                 phone: null
+ *                 address: null
+ *                 contact_name: null
+ *                 contact_phone: null
+ *                 last_login: null
+ *                 status: confirmed
+ *                 is_admin: 0
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.get('/all', getAllClients);
+
+/**
+ * @swagger
+ * /clients/search:
+ *   get:
+ *     summary: (🔐) Busca clientes por filtros específicos by query.
+ *     description: Entrega los datos básicos del los clientes que coincidan con los filtros de búsqueda enviados por query.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/queryBusinessName'
+ *       - $ref: '#/components/parameters/queryTaxId'
+ *       - $ref: '#/components/parameters/queryEmail'
+ *       - $ref: '#/components/parameters/queryPhone'
+ *       - $ref: '#/components/parameters/queryAddress'
+ *       - $ref: '#/components/parameters/queryContactName'
+ *       - $ref: '#/components/parameters/queryContactPhone'
+ *       - $ref: '#/components/parameters/queryIsAdmin'
+ *       - $ref: '#/components/parameters/queryStatus'
+ *     responses:
+ *       200:
+ *         description: Devuelve un array con todos los clientes que cumplan con las condiciones de búsqueda.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/clientPublic'
+ *             example:
+ *               - id: 091549e9-49b1-11f1-acdd-507b9d97da6f
+ *                 business_name: Freelance mayhem SA
+ *                 tax_id: 25-36999123-1
+ *                 email: FreeMay@consultas.com
+ *                 phone: null
+ *                 address: null
+ *                 contact_name: null
+ *                 contact_phone: null
+ *                 last_login: null
+ *                 status: confirmed
+ *                 is_admin: 0
+ *       400:
+ *         description: Enviamos un body vacío o ninguna condición válida de búsqueda.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               body_vacío:
+ *                 summary: ⭕ Body vacío
+ *                 value:
+ *                   error: No se recibió nada por body
+ *                   code: RECEIVED_AN_EMPTY_BODY
+ *               sin_condiciones_válidas:
+ *                 summary: ⚠ Condiciones inválidas
+ *                 value:
+ *                   error: Sin filtros válidos
+ *                   code: NO_VALID_FILTERS_TO_SEARCH
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.get('/search', getClientsByQuery);
 
+/**
+ * @swagger
+ * /clients/{id}/toggle:
+ *   patch:
+ *     summary: (🔐) Alterna el estado del cliente [active/inactive].
+ *     description: Enviamos un ID por params, el servidor busca ese cliente -> encuentra su estado actual -> lo actualiza por su opuesto. [ Active -> Inactive ] || [ Inactive -> Active ]
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando la actualización del estado del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Estado del cliente actualizado
+ *       400:
+ *         description: Problemas con el ID enviado o el estado actual del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               id_no_recibido:
+ *                 summary: ⭕ No enviamos ID
+ *                 value:
+ *                   error: ID no recibido
+ *                   code: ID_REQUIRED
+ *               id_con_formato_inválido:
+ *                 summary: ⚠ Enviamos ID inválido
+ *                 value:
+ *                   error: Formato del ID inválido
+ *                   code: INVALID_ID_FORMAT
+ *               status_actual_inmutable:
+ *                 summary: ⚠ Status no modificable
+ *                 description: En caso que el usuario no sea exactamente 'active' o 'inactive' recibiremos este error. 'Pending' y 'Confirmed' no pueden modificarse mediante esta ruta.
+ *                 value:
+ *                   error: Status actual no intercambiable
+ *                   code: INVALID_ACTUAL_STATUS
+ *       404:
+ *         description: No encontramos un cliente con esa ID en la base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Cliente no encontrado
+ *               code: CLIENT_NOT_FOUND
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_conseguimos_datos_actualizados:
+ *                  summary: ❓ El cliente desapareció durante la operación
+ *                  value:
+ *                    error: El cliente desapareció durante la operación
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.patch('/:id/toggle', toggleClient);
+
+/**
+ * @swagger
+ * /clients/{id}/toggle-admin:
+ *   patch:
+ *     summary: (🔐) Alterna permisos de administrador [active/inactive].
+ *     description: Cambia los permisos del cliente dueño del ID enviado por parametros.
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un mensaje confirmando la actualización de los permisos del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Privilegios del cliente actualizados
+ *       400:
+ *         description: Problemas con el ID enviado o el estado actual del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               id_no_recibido:
+ *                 summary: ⭕ No enviamos ID
+ *                 value:
+ *                   error: ID no recibido
+ *                   code: ID_REQUIRED
+ *               id_con_formato_inválido:
+ *                 summary: ⚠ Enviamos ID inválido
+ *                 value:
+ *                   error: Formato del ID inválido
+ *                   code: INVALID_ID_FORMAT
+ *       403:
+ *         description: Estamos intentando quitarnos nuestros propios privilegios de administrador.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: No puede auto-quitarse los privilegios
+ *               code:  CANNOT_TOGGLE_OWN_PRIVILEGES
+ *       404:
+ *         description: No encontramos un cliente con esa ID en la base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Cliente no encontrado
+ *               code: CLIENT_NOT_FOUND
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               datos_dessaparecidos_inesperadamente:
+ *                  summary: ❓ El cliente desapareció durante la operación
+ *                  value:
+ *                    error: El cliente desapareció durante la operación
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 clientsRouter.patch('/:id/toggle-admin', toggleAdmin);
+
+/**
+ * @swagger
+ * /clients/{id}:
+ *   get:
+ *     summary: (🔐) Entrega datos y facturas relacionadas con el cliente.
+ *     description: Entrega los datos completos del usuario y todas las facturas relacionadas con el mismo.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+ *     responses:
+ *       200:
+ *         description: Devuelve un objeto con todos los datos y facturas del cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/clientPrivate'
+ *             example:
+ *                 id: 08ed9059-26f3-11f1-bf6b-e4fd45b45662
+ *                 business_name: Alpine TECH
+ *                 tax_id: 25-930201-3
+ *                 email: Alpine@consultas.com
+ *                 phone: 0800-666-7171
+ *                 address: Constitución 411
+ *                 contact_name: Minerva Belen
+ *                 contact_phone: 1557483920
+ *                 last_login: null
+ *                 status: pending
+ *                 is_admin: 0
+ *                 invoices: []
+ *       400:
+ *         description: Hay problemas con el ID recibido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             examples:
+ *               id_inexistente:
+ *                 summary: ✖ No había ID en el token
+ *                 value:
+ *                   error: ID no recibido
+ *                   code: ID_REQUIRED
+ *               id_con_formato_inválido:
+ *                 summary: ✖ ID con formato inválido
+ *                 value:
+ *                   error: Formato del ID inválido
+ *                   code: INVALID_ID_FORMAT
+ *       401:
+ *         description: No se recibió token vía header.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             examples:
+ *               no_enviamos_token:
+ *                 summary: ✖ No enviamos ningún token
+ *                 value:
+ *                   error: No se recibió token via header
+ *                   code: MISSING_AUTH_HEADER
+ *               token_inválido:
+ *                 summary: ✖ Token con formato inválido
+ *                 value:
+ *                   error: Token inválido
+ *                   code: JsonWebTokenError
+ *               token_expirado:
+ *                 summary: ✖ Token expirado
+ *                 value:
+ *                   error: Token expirado
+ *                   code: TokenExpiredError
+ *       404:
+ *         description: No hay un cliente con ese ID en la base de datos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             example:
+ *               error: Cliente no encontrado
+ *               code: CLIENT_NOT_FOUND
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                 code:
+ *                   type: string
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
 
 clientsRouter.get('/:id', getClientById);
 
