@@ -1,5 +1,63 @@
 # Changelog
 
+## [Clients Module] - 2026-05-09
+
+### Swagger/OpenAPI Documentation Completed
+
+Completed Swagger documentation for the entire clients module, including public routes, authenticated client routes, and admin routes.
+
+#### Endpoints documented
+
+**Public:**
+- `POST /clients` → client registration with examples (success, errors, empty body)
+- `POST /clients/login` → authentication with examples (valid/invalid credentials, missing fields, invalid format)
+- `GET /clients/me/verify/{verification_token}` → email verification with `operationId: verifyClient`
+- `PATCH /clients/me/reactivate/{verification_token}` → account reactivation via token
+
+**Authenticated client (requires `bearerAuth`):**
+- `GET /clients/me` → logged-in user profile
+- `PATCH /clients/me` → update non-critical data (phone, address, contact_name, contact_phone)
+- `PATCH /clients/me/change-password` → password change with security validations
+- `PATCH /clients/me/deactivate` → deactivate own account
+- `POST /clients/me/reactivate` → request reactivation email
+
+**Admin (requires `bearerAuth` + admin role):**
+- `GET /clients/all` → list all clients
+- `GET /clients/search` → dynamic search with multiple filters (business_name, tax_id, email, phone, address, contact_name, contact_phone, is_admin, status)
+- `PATCH /clients/{id}/toggle` → toggle client status (active ↔ inactive)
+- `PATCH /clients/{id}/toggle-admin` → toggle admin privileges
+- `GET /clients/{id}` → get client by ID with related invoices
+
+#### Reusable schemas and components
+
+Defined in `components/schemas`:
+- `Client` → full client structure (`/me` response)
+- `clientPublic` → reduced version for listings (`/all`, `/search`)
+- `clientPrivate` → full version with nested `invoices` (`/{id}`)
+- `postClient` → required fields for registration
+- `updateClient` → allowed fields for update
+- `errorMessage` → unified error structure
+
+Defined in `components/parameters` (reused in `/search`):
+- `queryBusinessName`, `queryTaxId`, `queryEmail`, `queryPhone`, `queryAddress`, `queryContactName`, `queryContactPhone`, `queryIsAdmin`, `queryStatus`
+
+#### Error responses documented
+
+| Code | Cases documented |
+|------|------------------|
+| 400 | Empty body, invalid format, missing fields, invalid conditions, immutable status |
+| 401 | Missing token, invalid token, expired token |
+| 403 | Inactive account, self-privilege removal |
+| 404 | Client not found |
+| 409 | Duplicate entry (`ER_DUP_ENTRY`) |
+| 500 | Data inconsistency (`DATA_CONSISTENCY_ERROR`), internal error (`INTERNAL_SERVER_ERROR`) |
+
+#### Technical Highlights
+- Used `$ref` to avoid repeating schemas and parameters
+- Used `operationId: verifyClient` to link from `POST /clients` response
+- Added step-by-step instructions in `POST /clients` description guiding users to verify their account
+- Visual separation using emojis in titles: (👥) public, (👤) authenticated, (🔐) admin
+
 ## [Project v1.0] - 2026-04-12
 
 ### Final Status

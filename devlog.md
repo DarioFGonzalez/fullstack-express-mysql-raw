@@ -1,5 +1,36 @@
 # Devlog
 
+## [Clients Swagger] 2026-05-09
+
+### Completé la documentación Swagger del módulo clients
+
+Documenté el resto de los endpoints que faltaban:
+
+**Rutas de cliente autenticado:**
+- `PATCH /me/change-password` → cambio de contraseña con ejemplos de errores
+- `PATCH /me/deactivate` → desactivar cuenta
+- `POST /me/reactivate` → solicitar reactivación por email
+- `PATCH /me/reactivate/{token}` → reactivar cuenta con token
+
+**Rutas de administrador:**
+- `GET /all` → listar todos los clientes
+- `GET /search` → búsqueda con filtros (business_name, email, status, etc.)
+- `PATCH /{id}/toggle` → alternar estado (active/inactive)
+- `PATCH /{id}/toggle-admin` → alternar permisos de admin
+- `GET /{id}` → cliente por ID con sus facturas
+
+**Schemas nuevos:**
+- `clientPublic` → versión reducida para listados
+- `clientPrivate` → con `invoices` anidado
+- `errorMessage` → estructura unificada de errores
+
+**Parámetros reutilizables:**
+- Definí `components/parameters` para los filtros de `/clients/search`
+
+**Manejo de errores:**
+- Documenté todos los códigos: 400, 401, 403, 404, 409, 500
+- Incluí ejemplos específicos para cada caso (body vacío, formato inválido, etc.)
+
 ## [Swagger Documentation] 2026-05-02
 
 ### Documentación interactiva con OpenAPI

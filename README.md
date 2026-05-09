@@ -4,6 +4,7 @@
 ### *Transactional inventory system with ACID guarantees*
 
 ![Status](https://img.shields.io/badge/status-production--ready-brightgreen)
+![Swagger](https://img.shields.io/badge/Swagger-UI-85EA2D?style=flat&logo=swagger)
 ![Transactions](https://img.shields.io/badge/ACID-transactions-blue)
 ![Stock](https://img.shields.io/badge/feature-reserved--stock-orange)
 ![MySQL](https://img.shields.io/badge/MySQL-raw--queries-4479A1)
@@ -126,6 +127,7 @@ src/
 | `GET` | `/clients/search` | Búsqueda dinámica | Solo admin |
 | `GET` | `/clients/:id` | Obtener cliente por ID | Solo admin |
 | `PATCH` | `/clients/:id/toggle` | Activar/desactivar cliente | Solo admin |
+| `PATCH` | `/clients/:id/toggle-admin` | Dar/revocar permisos de admin | Solo admin |
 
 ### 📦 Productos
 
@@ -145,7 +147,6 @@ src/
 | `POST` | `/invoices` | Crear carrito (`draft`) con primer item | Cliente activo |
 | `GET` | `/invoices/me` | Mis facturas | Cliente autenticado |
 | `GET` | `/invoices/me/active` | Mi carrito activo | Cliente autenticado |
-| `GET` | `/invoices/me/:invoiceId` | Obtener una de mis facturas | Cliente autenticado |
 | `PATCH` | `/invoices/:id` | Batch update (cantidad `0` = eliminar) | Cliente activo (solo draft) |
 | `POST` | `/invoices/:id/confirm` | Confirmar pedido (✅ reserva stock) | Cliente activo |
 | `POST` | `/invoices/:id/cancel` | Cancelar pedido (❌ libera stock) | Cliente activo |
@@ -173,6 +174,32 @@ src/
 - Transacciones SQL (`BEGIN` / `COMMIT` / `ROLLBACK`)
 - Manejo de errores consistente
 - Documentación con `devlog.md` y `CHANGELOG.md`
+- **Documentación interactiva con Swagger/OpenAPI** (✅ completada)
+
+---
+
+## 📚 Documentación interactiva con Swagger
+
+El módulo de **Clientes** está completamente documentado con OpenAPI 3.0, incluyendo:
+
+- **16 endpoints** documentados con ejemplos de request y response
+- **Schemas reutilizables** (`Client`, `clientPublic`, `clientPrivate`, `postClient`, `updateClient`, `errorMessage`)
+- **Parámetros reutilizables** para búsqueda dinámica (`/clients/search`)
+- **Cobertura completa de errores**: 400, 401, 403, 404, 409, 500 con ejemplos específicos
+- **Casos de prueba** para cada escenario:
+  - Registro exitoso con/sin datos opcionales
+  - Datos extra ignorados
+  - Campos obligatorios faltantes
+  - Email o contraseña con formato inválido
+  - Login con credenciales incorrectas
+  - Token expirado o inválido
+  - Intento de desactivación de cuenta inactiva
+  - Auto-desactivación de privilegios de admin
+  - Inconsistencia de datos (`DATA_CONSISTENCY_ERROR`)
+
+La documentación está disponible en `/api-docs` una vez que el servidor esté corriendo.
+
+🔗 http://localhost:5000/api-docs
 
 ---
 
@@ -192,7 +219,6 @@ npm run dev
 - Webhook real de pagos (MercadoPago)
 - Dashboard de administración
 - Tests unitarios y de integración
-- Documentación con Swagger
 
 ---
 
@@ -205,6 +231,7 @@ npm run dev
 | Products CRUD | ✅ Completado |
 | Invoices CRUD + ciclo de vida (confirm/deliver/paid/cancel) | ✅ Completado |
 | Autenticación JWT + middlewares + roles | ✅ Completado |
+| Swagger/OpenAPI Documentation | ✅ Completado |
 
 ---
 
