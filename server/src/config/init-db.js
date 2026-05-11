@@ -118,16 +118,16 @@ async function seedTestData() {
     ]);
 
     const products = [
-        ['SKU-001', 'Notebook Gamer', 'i7, 16GB RAM, RTX 3060', 'Electronica', 850000.00, 50, 0],
-        ['SKU-002', 'Mouse Inalambrico', 'Logitech MX Master 3', 'Electronica', 45000.00, 150, 0],
-        ['SKU-003', 'Teclado Mecanico', 'Redragon Kumara', 'Electronica', 35000.00, 80, 5],
-        ['SKU-004', 'Monitor 24"', 'Full HD, IPS, 75Hz', 'Electronica', 180000.00, 30, 10]
+        ['e7b49539-49b0-11f1-acdd-507b9d97da6f', 'SKU-001', 'Notebook Gamer', 'i7, 16GB RAM, RTX 3060', 'Electronica', 850000.00, 50, 0],
+        ['e7b50924-49b0-11f1-acdd-507b9d97da6f', 'SKU-002', 'Mouse Inalambrico', 'Logitech MX Master 3', 'Electronica', 45000.00, 150, 0],
+        ['e7b58c1f-49b0-11f1-acdd-507b9d97da6f', 'SKU-003', 'Teclado Mecanico', 'Redragon Kumara', 'Electronica', 35000.00, 80, 5],
+        ['e7b5f3e4-49b0-11f1-acdd-507b9d97da6f', 'SKU-004', 'Monitor 24"', 'Full HD, IPS, 75Hz', 'Electronica', 180000.00, 30, 10]
     ];
 
     for (const p of products) {
         await pool.query(`
-            INSERT INTO products (sku, name, description, category, unit_price, stock, reserved_stock, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            INSERT INTO products (id, sku, name, description, category, unit_price, stock, reserved_stock, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
             ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 unit_price = VALUES(unit_price),

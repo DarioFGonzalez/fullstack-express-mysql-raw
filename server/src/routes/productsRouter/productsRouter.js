@@ -350,6 +350,13 @@ productsRouter.post('/', postProduct);
  *       - Products
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: e7b49539-49b0-11f1-acdd-507b9d97da6f
  *     requestBody:
  *       required: true
  *       content:
@@ -398,11 +405,10 @@ productsRouter.post('/', postProduct);
  *             example:
  *               id: e7b49539-49b0-11f1-acdd-507b9d97da6f
  *               sku: SKU-001
- *               name: Notebook GAMER
- *               description: i7, 16GB RAM, RTX 3060
- *               category: Electronica
- *               unit_price: 850000.00
- *               stock: 50
+ *               name: Notebook promedio
+ *               description: i5, 8GB RAM, Integrated graphics
+ *               unit_price: 350000.00
+ *               stock: 75
  *               reserved_stock: 0
  *               is_active: 1
  *               created_at: 2026-05-07T01:05:57.000Z
