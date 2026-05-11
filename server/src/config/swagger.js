@@ -101,6 +101,8 @@ const options = {
                     }
                 },
                 clientPublic: {
+                    type: 'object',
+                    properties: {
                         id: {
                             type: 'string',
                             description: 'Identificador único universal (UUID) del cliente. Generado automáticamente en el momento del registro.'
@@ -155,6 +157,7 @@ const options = {
                             enum: [0, 1],
                             description: 'Indica si el cliente tiene privilegios de administrador. 0 = cliente común, 1 = administrador.'
                         }
+                    }
                 },
                 clientPrivate: {
                     type: 'object',
@@ -290,6 +293,113 @@ const options = {
                         contact_phone: { type: 'string' }
                     }
                 },
+                Product: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        sku: { type: 'string' },
+                        name: { type: 'string' },
+                        description: { type: 'string' },
+                        category: { type: 'string' },
+                        unit_price: { type: 'number', format: 'double' },
+                        stock: { type: 'number' },
+                        reserved_stock: { type: 'number' },
+                        is_active: { type: 'integer', enum: [0, 1] },
+                        created_at: { type: 'string', format: 'date-time' },
+                        updated_at: { type: 'string', format: 'date-time' }
+                    }
+                },
+                productPublic: { 
+                    type: 'object',
+                    properties: {
+                        id: {
+                            type: 'string',
+                            description: 'Identificador único universal (UUID) del cliente. Generado automáticamente en el momento del registro.'
+                        },
+                        sku: {
+                            type: 'string',
+                            description: 'Stock Keeping Unit. Código alfanumérico único de identificación comercial. Se utiliza para la gestión de inventario y sincronización con sistemas externos.'
+                        },
+                        name: {
+                            type: 'string',
+                            description: 'Nombre comercial del producto. Debe ser descriptivo y único para facilitar la búsqueda en el catálogo.'
+                        },
+                        description: {
+                            type:'string',
+                            description: 'Detalle técnico o comercial del producto. Soporta texto extendido para especificaciones, materiales o dimensiones.'
+                        },
+                        category: {
+                            type: 'string',
+                            enum: [ 'Electronica', 'Mobiliario', 'Iluminacion', 'Insumos' ],
+                            description: 'Categoría o familia a la que pertenece el producto. Utilizada para la segmentación en búsquedas y reportes de inventario.'
+                        },
+                        unit_price: {
+                            type: 'number',
+                            format: 'double',
+                            description: 'Precio unitario de venta en formato decimal. Este valor se captura y congela en la factura al momento de agregar el producto al carrito.'
+                        },
+                        stock: {
+                            type: 'number',
+                            description: 'Cantidad física total disponible en almacén. Representa la existencia real antes de considerar reservas pendientes de entrega.'
+                        },
+                        reserved_stock: {
+                            type: 'number',
+                            description: 'Cantidad de unidades comprometidas en pedidos confirmados pero aún no entregados. Este valor garantiza la integridad del inventario durante el ciclo de venta.'
+                        },
+                        is_active: {
+                            type: 'number',
+                            enum: [0,1],
+                            description: 'Estado lógico del producto. 1 (activo) permite la venta y visualización; 0 (inactivo) actúa como borrado lógico para preservar la integridad referencial de facturas históricas.'
+                        }
+                    }
+                },
+                postProduct: {
+                    type: 'object',
+                    required: [ 'sku', 'name', 'category', 'unit_price' ],
+                    properties: {
+                        sku: {
+                            type: 'string',
+                            description: 'Stock Keeping Unit. Código alfanumérico único de identificación comercial. Se utiliza para la gestión de inventario y sincronización con sistemas externos.'
+                        },
+                        name: {
+                            type: 'string',
+                            description: 'Nombre comercial del producto. Debe ser descriptivo y único para facilitar la búsqueda en el catálogo.'
+                        },
+                        category: {
+                            type: 'string',
+                            enum: [ 'Electronica', 'Mobiliario', 'Iluminacion', 'Insumos' ],
+                            description: 'Categoría o familia a la que pertenece el producto. Utilizada para la segmentación en búsquedas y reportes de inventario.'
+                        },
+                        unit_price: {
+                            type: 'number',
+                            format: 'double',
+                            description: 'Precio unitario de venta en formato decimal. Este valor se captura y congela en la factura al momento de agregar el producto al carrito.'
+                        },
+                        description: {
+                            type:'string',
+                            description: 'Detalle técnico o comercial del producto. Soporta texto extendido para especificaciones, materiales o dimensiones.'
+                        },
+                        stock: {
+                            type: 'number',
+                            description: 'Cantidad física total disponible en almacén. Representa la existencia real antes de considerar reservas pendientes de entrega.'
+                        },
+                        is_active: {
+                            type: 'number',
+                            enum: [0,1],
+                            description: 'Estado lógico del producto. 1 (activo) permite la venta y visualización; 0 (inactivo) actúa como borrado lógico para preservar la integridad referencial de facturas históricas.'
+                        }
+                    }
+                },
+                updateProduct: {
+                    type: 'object',
+                    properties: {
+                        name: { type: 'string' },
+                        description: { type: 'string' },
+                        unit_price: { type: 'number', format: 'double' },
+                        stock: { type: 'integer' },
+                        reserved_stock: { type: 'integer' }
+                    }
+                },
                 errorMessage: {
                     type: 'object',
                     properties: {
@@ -319,13 +429,12 @@ const options = {
                 }
             },
             parameters: {
+                //Client queries
                 queryBusinessName: {
                     in: 'query',
                     name: 'business_name',
                     example: 'Admin Demo',
                     schema: { type: 'string' },
-                    explode: false,
-                    style: 'form',
                     description: 'Razón social completa o nombre comercial legalmente registrado de la empresa cliente.'
                 },
                 queryTaxId: {
@@ -384,6 +493,56 @@ const options = {
                     schema: { type: 'string', enum: [ 'pending', 'confirmed', 'active', 'inactive' ] },
                     description: 'Estado actual de la cuenta del cliente. pending = email sin verificar, confirmed = email verificado pendiente aprobación admin, active = cuenta habilitada para operar, inactive = cuenta desactivada por el cliente.'
                 },
+                // Product queries
+                querySku: {
+                    in: 'query',
+                    name: 'sku',
+                    schema: { type: 'string' },
+                    example: 'SKU-003',
+                    description: 'Buscamos por código de identificación comercial único'
+                },
+                queryName: {
+                    in: 'query',
+                    name: 'name',
+                    schema: { type: 'string' },
+                    example: 'Teclado Mecanico',
+                    description: 'Buscamos por nombre del producto'
+                },
+                queryCategory: {
+                    in: 'query',
+                    name: 'category',
+                    schema: { type: 'string', enum: [ 'Electronica', 'Mobiliario', 'Iluminacion', 'Insumos' ] },
+                    example: 'Electronica',
+                    description: 'Buscamos por categoria'   
+                },
+                queryUnitPrice: {
+                    in: 'query',
+                    name: 'unit_price',
+                    schema: { type: 'number', format: 'double' },
+                    example: '35000.00',
+                    description: 'Buscamos por precio exacto'
+                },
+                queryStock: {
+                    in: 'query',
+                    name: 'stock',
+                    schema: { type: 'number' },
+                    example: 80,
+                    description: 'Buscamos por stock exacto'
+                },
+                queryReservedStock: {
+                    in: 'query',
+                    name: 'reserved_stock',
+                    schema: { type: 'number' },
+                    example: 5,
+                    description: 'Buscamos por stock reservado exacto'
+                },
+                queryIsActive: {
+                    in: 'query',
+                    name: 'is_active',
+                    schema: { type: 'integer', enum: [0, 1] },
+                    example: 1,
+                    description: 'Buscamos por estado del producto [0 = inactivo] [1 = activo]'
+                }
             },
             examples: {
             }

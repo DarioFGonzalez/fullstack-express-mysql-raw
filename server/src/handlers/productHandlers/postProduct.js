@@ -8,8 +8,11 @@ const postProduct = async (req, res) => {
 
         const insertQuery = `INSERT INTO products (${columnsQuery}) VALUES (${placeholders})`;
 
-        await req.pool.query(insertQuery, values);
-
+        const [result] = await req.pool.query(insertQuery, values);
+        if(result.affectedRows===0) {
+            throw createError('No se pudo crear el registro de producto', 500, 'DATA_CONSISTENCY_ERROR')
+        }
+        
         const [rows] = await req.pool.query(`SELECT ${productFields} FROM products WHERE sku = ?`, [ req.body.sku ] );
         if(rows.length===0) {
             throw createError('Producto no encontrado', 404, 'PRODUCT_NOT_FOUND');

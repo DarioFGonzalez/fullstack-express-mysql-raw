@@ -82,7 +82,7 @@ const getByQueryBuilder = (allowedFilters) => (queries) => {
 }
 
 const searchClientsQuery = getByQueryBuilder(['phone', 'address', 'contact_name', 'contact_phone', 'business_name', "email", "status", "tax_id", "is_admin"]);
-const searchProductQuery = getByQueryBuilder(['sku', 'name', 'description', 'category', 'unit_price', 'stock', 'reserved_stock', 'is_active']);
+const searchProductQuery = getByQueryBuilder(['sku', 'name', 'category', 'unit_price', 'stock', 'reserved_stock', 'is_active']);
 
 //UPDATE Builders
 const updateQueryBuilder = (allowedParams) => (queries) => {

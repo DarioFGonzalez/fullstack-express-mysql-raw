@@ -1062,6 +1062,7 @@ clientsRouter.patch('/:id/toggle', toggleClient);
  *   patch:
  *     summary: (🔐) Alterna permisos de administrador [active/inactive].
  *     description: Cambia los permisos del cliente dueño del ID enviado por parametros.
+ *     tags:
  *       - Clients
  *     security:
  *       - bearerAuth: []
