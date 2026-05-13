@@ -1,5 +1,43 @@
 # Devlog
 
+## [Products Swagger] 2026-05-11
+
+### Completed Swagger documentation for the Products module
+
+Fully integrated Swagger/JSDoc documentation for all product-related endpoints. Applied the same modular architecture used in the Clients module but refined the use of reusable components to handle complex search filters and administrative actions.
+
+#### Endpoints documented
+
+**Public (👥):**
+- `GET /products/all` → full listing using `productPublic` schema.
+- `GET /products/search` → dynamic search. Documented all query parameters (`sku`, `name`, `category`, `unit_price`, `stock`, `reserved_stock`, `is_active`) using global references.
+- `GET /products/{id}` → fetch specific product by UUID with 404 error handling.
+
+**Admin (🔐 - Requires `bearerAuth` + admin role):**
+- `POST /products` → creation logic. Included detailed request body examples for successful creation, missing required fields, and duplicate SKU conflicts.
+- `PATCH /products/{id}` → partial updates with examples of allowed/ignored fields.
+- `PATCH /products/{id}/toggle-active` → logic for soft-delete/reactivation.
+
+#### Reusable components and configuration
+
+Updated `swagger.js` to support the new module:
+- **Schemas:** Created `Product`, `productPublic`, `postProduct`, and `updateProduct` components. Used `$ref` to keep the router code clean and the documentation DRY.
+- **Parameters:** Centralized all search filters in `components/parameters`. This allows the `/search` endpoint to remain readable while providing full documentation for 7+ query params.
+- **Global Security:** Integrated `bearerAuth` for all protected routes, ensuring the Swagger UI correctly handles JWT headers.
+
+#### Error handling
+- Standardized error responses using the `errorMessage` schema.
+- Documented specific scenarios: `409 Conflict` (for duplicate SKUs), `400 Bad Request` (invalid UUID format or missing body), and `500 Internal Server Error`.
+
+#### Technical Highlights
+- **DRY Documentation:** Refined the use of `$ref` for both schemas and parameters, making the documentation as modular as the backend code itself.
+- **Improved UX:** Included rich examples for `POST` and `PATCH` requests to clarify which fields are strictly required vs. optional, reducing potential friction for API consumers.
+
+#### Next Steps
+- [ ] Document the `invoices` module (integrating transaction-heavy logic into OpenAPI).
+- [ ] Verify naming consistency between DB models and Swagger schemas.
+- [ ] Prepare final deployment for public `/api-docs`.
+
 ## [Clients Swagger] 2026-05-09
 
 ### Completé la documentación Swagger del módulo clients

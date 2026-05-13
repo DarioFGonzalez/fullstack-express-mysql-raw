@@ -1,5 +1,48 @@
 # Changelog
 
+## [Products Module] - 2026-05-11
+
+### Swagger/OpenAPI Documentation Completed
+
+Completed Swagger documentation for the entire products module, including public endpoints for catalog browsing and protected admin routes for inventory management.
+
+#### Endpoints documented
+
+**Public:**
+- `GET /products/all` → list all products (basic data)
+- `GET /products/search` → dynamic search with multiple filters (sku, name, category, unit_price, stock, reserved_stock, is_active)
+- `GET /products/{id}` → get complete product details by ID
+
+**Admin (requires `bearerAuth` + admin role):**
+- `POST /products` → create a new product with examples (only required data, optional data included, ignored extra data, missing fields)
+- `PATCH /products/{id}` → update product data with examples (valid fields, mixed valid/invalid fields, empty body)
+- `PATCH /products/{id}/toggle-active` → toggle product status (active ↔ inactive)
+
+#### Reusable schemas and components
+
+Defined in `components/schemas`:
+- `Product` → full product structure
+- `productPublic` → reduced version for catalog listings (`/all`, `/search`)
+- `postProduct` → required and optional fields for product creation
+- `updateProduct` → allowed fields for partial updates
+
+Defined in `components/parameters` (reused in `/search`):
+- `querySku`, `queryName`, `queryCategory`, `queryUnitPrice`, `queryStock`, `queryReservedStock`, `queryIsActive`
+
+#### Error responses documented
+
+| Code | Cases documented |
+|------|------------------|
+| 400 | Empty body, missing required fields, invalid ID format, no valid conditions to update, no valid filters to search |
+| 404 | Product not found |
+| 409 | Duplicate entry (`ER_DUP_ENTRY`) for SKU |
+| 500 | Data inconsistency (`DATA_CONSISTENCY_ERROR`), internal server error (`INTERNAL_SERVER_ERROR`) |
+
+#### Technical Highlights
+- Used `$ref` extensively to maintain a DRY Swagger configuration across schemas and search parameters.
+- Implemented robust `examples` in request bodies (e.g., `POST /products` and `PATCH /products/{id}`) to clearly illustrate success paths, ignored extra data, and specific validation failures.
+- Visual separation using emojis in summaries: (👥) public, (🔐) admin.
+
 ## [Clients Module] - 2026-05-09
 
 ### Swagger/OpenAPI Documentation Completed
