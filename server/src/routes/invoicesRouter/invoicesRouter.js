@@ -282,6 +282,13 @@ invoicesRouter.get('/me/active', getMyActiveInvoice);
  *       - Invoices
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: invoiceId
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: cccccccc-cccc-cccc-cccc-cccccccccccc
  *     responses:
  *       200:
  *         description: Devuelve un objeto con la factura deseada y todos los productos relacionados en la propiedad "products".
@@ -529,7 +536,213 @@ invoicesRouter.get('/me/:invoiceId', getThisInvoice);
  */
 
 invoicesRouter.patch('/:id', updateInvoice);
-invoicesRouter.post('/:id/confirm', confirmInvoice);
+
+/**
+ * @swagger
+ * /invoices/confirm:
+ *   post:
+ *     summary: (👤) Confirmamos la factura activa.
+ *     description: Cambiamos el estado de la factura actual a "Confirmed", reservamos stock, creamos fechas de emisión y vencimiento usando los terminos de pago suministrados.
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: 'object'
+ *               required:
+ *                 - payment_terms
+ *               properties:
+ *                 payment_terms:
+ *                   type: string
+ *                   enum: [30, 60, 90, 120] 
+ *                 notes:
+ *                   type: string
+ *           examples:
+ *               enviamos_lo_necesario:
+ *                 summary: ✔ Enviamos solo el dato clave.
+ *                 descriptioin: Los terminos de pago (payment_terms) son clave para calcular la fecha de vencimiento (due_date), siendo el único dato obligatorio para la confirmación.
+ *                 value:
+ *                   payment_terms: 90
+ *               enviamos_notas_también:
+ *                 summary: ✔✔ Enviamos también las notas.
+ *                 description: Podemos enviar una nota para dejar en el registro de la factura.
+ *                 value:
+ *                   payment_terms: 120
+ *                   notes: El contacto para este pedido específico difiere del contacto de cliente registrado, por favor usar el siguiente (1557482019)Juan
+ *               falta_dato_clave:
+ *                 summary: ⭕ Falta dato clave.
+ *                 value:
+ *                   notes: Nota dedicada a detalles de venta o contacto.
+ *                   total: 1500.75
+ *                   due_date: 12/06/2026
+ *                   issue_date: NOW()
+ *                   paid_at: 15/05/2026
+ *               payment_terms_inválido:
+ *                 summary: ✖ Términos de pago inválidos.
+ *                 description: Los términos de pago válidos son 30, 60, 90 y 120. Con cualquier otro valor recibiremos un error como respuesta.
+ *                 value:
+ *                   payment_terms: 15
+ *                   notes: Se decidió dar 15 días como termino de pago.
+ *     responses:
+ *       200:
+ *         description: En caso de que el proceso termine correctamente, recibimos un mensaje de confirmación junto con el id del invoice y su invoice_number.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               value:
+ *                 message:
+ *                   type: string
+ *                 invoice_id:
+ *                   type: string
+ *                 invoice_number:
+ *                   type: string
+ *             example:
+ *               message: 'Invoice confirmado'
+ *               invoice_id: 123123123123123123
+ *               invoice_number: 123123123123
+ *       400:
+ *         description: No enviamos términos de pago o son inválidos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               termino_de_pago_no_recibido:
+ *                 summary: ⭕ No enviamos terminos de pago
+ *                 value:
+ *                   error: Términos de pago no recibidos
+ *                   code: PAYMENT_TERMS_REQUIRED
+ *               termino_de_pago_con_formato_inválido:
+ *                 summary: ⚠ Enviamos terminos de pago inválidos
+ *                 value:
+ *                   error: Término de pago no válido
+ *                   code: INVALID_PAYMENT_TERMS
+ *       404:
+ *         description: No se encontró ningún invoice activo a nombre del cliente logeado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: No se encontró ningún invoice activo
+ *               code: INVOICE_NOT_FOUND
+ *       409:
+ *         description: El stock actual del producto no puede cumplir con la demanda de la solicitud.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example: 
+ *               error: Stock insuficiente en producto ID {id del producto}
+ *               code: INSUFFICIENT_STOCK
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_se_pudo_actualizar_en_el_paso_final:
+ *                  summary: ✖ Error en el paso final del proceso
+ *                  value:
+ *                    error: No se actualizó el invoice en el paso final
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
+invoicesRouter.post('/confirm', confirmInvoice);
+
+/**
+ * @swagger
+ * /invoices/cancel:
+ *   post:
+ *     summary: (👤) Cancelamos la factura dueña del ID enviado.
+ *     description: Al cancelar la factura, liberamos el stock reservado y asentamos fechas antes de archivar el registro de esta factura.
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: invoiceId
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: cccccccc-cccc-cccc-cccc-cccccccccccc
+ *     responses:
+ *       200:
+ *         description: Invoice cancelado, stock devuelto, registro archivado. Recibimos un mensaje confirmando la operación y el id de la factura archivada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               value:
+ *                 message:
+ *                   type: string
+ *                 invoice_id:
+ *                   type: string
+ *             example:
+ *               message: 'Invoice cancelado'
+ *               invoice_id: 123123123123123123
+ *       400:
+ *         description: No enviamos términos de pago o son inválidos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               summary: ⚠ El invoice no está confirmado
+ *               value:
+ *                   error: Solo se puede cancelar invoices confirmados
+ *                   code: CANNOT_CANCEL_AN_UNCONFIRMED_INVOICE
+ *       404:
+ *         description: No se encontró ningún invoice con esa ID en base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Invoice no encontrado
+ *               code: INVOICE_NOT_FOUND
+ *       409:
+ *         description: El stock actual del producto ya no puede cumplir con la demanda de la solicitud.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example: 
+ *               error: Stock insuficiente en producto ID {id del producto}
+ *               code: INCONSISTENT_RESERVED_STOCK
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_se_pudo_actualizar_en_el_paso_final:
+ *                  summary: ✖ Error en el paso final del proceso
+ *                  value:
+ *                    error: No se actualizó el invoice en el paso final
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
+
 invoicesRouter.post('/:id/cancel', cancelInvoice);
 
 //Admin routes

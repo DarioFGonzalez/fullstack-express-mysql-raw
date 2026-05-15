@@ -1,3 +1,4 @@
+const createError = require('../../utils/errorBuilder');
 const { getInvoiceWithItems } = require('../../utils/invoiceUtils');
 const { validateId } = require('../../utils/validations');
 
@@ -20,14 +21,8 @@ const cancelInvoice = async (req, res) => {
 
         const invoice = await getInvoiceWithItems(connection, id);
 
-        if(invoice.status!=='confirmed')
-        {
-            throw Object.assign( new Error('Solo se puede cancelar invoices confirmados'),
-            {
-                status: 400,
-                code: 'CANNOT_CANCEL_AN_UNCONFIRMED_INVOICE',
-                timestamp: new Date().toISOString()
-            })
+        if(invoice.status!=='confirmed')  {
+            throw createError('Solo se puede cancelar invoices confirmados', 400, 'CANNOT_CANCEL_AN_UNCONFIRMED_INVOICE');
         }
 
         invoice.products.forEach( (invoice_item) => {
@@ -43,12 +38,7 @@ const cancelInvoice = async (req, res) => {
             }
             else
             {
-                throw Object.assign( new Error(`Error con reserved_stock en producto ID: ${invoice_item.product_id}`),
-                {
-                    status: 409,
-                    code: 'INCONSISTENT_RESERVED_STOCK',
-                    timestamp: new Date().toISOString()
-                })
+                throw createError(`Error con reserved_stock en producto ID: ${invoice_item.product_id}`, 409, 'INCONSISTENT_RESERVED_STOCK');
             }
         })
 
@@ -69,14 +59,8 @@ const cancelInvoice = async (req, res) => {
         WHERE id = ?`;
 
         const [result] = await connection.query(updateInvoiceQuery, [ id ]);
-        if(result.affectedRows===0)
-        {
-            throw Object.assign( new Error('No se actualizó el invoice en el paso final'),
-            {
-                status: 500,
-                code: 'COULDNT_UPDATE_INVOICE',
-                timestamp: new Date().toISOString()
-            })
+        if(result.affectedRows===0) {
+            throw createError('No se actualizó el invoice en el paso final', 500, 'DATA_INCONSISTENCY_ERROR');
         }
 
         await connection.commit();

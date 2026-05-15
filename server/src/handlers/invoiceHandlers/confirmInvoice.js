@@ -40,7 +40,7 @@ const confirmInvoice = async (req, res) => {
             }
             else
             {
-                throw createError(`Sin stock suficiente en product ID: ${invoice_item.product_id}`, 409, 'INSUFFICIENT_STOCK');
+                throw createError(`Sin stock suficiente en producto ID: ${invoice_item.product_id}`, 409, 'INSUFFICIENT_STOCK');
             }
         })
 
