@@ -1,3 +1,4 @@
+const createError = require("../../utils/errorBuilder");
 const { getInvoiceWithItems } = require("../../utils/invoiceUtils");
 const validation = require('../../utils/validations');
 
@@ -22,17 +23,15 @@ const getThisInvoice = async (req, res) => {
 
     validation.validateId(invoiceId);
 
-    const invoiceFields = 'id, status, total, created_at, issue_date, due_date, delivered_at, paid_at';
+    const invoiceFields = 'id, client_id';
 
     try {
-        const [response] = await req.pool.query(`SELECT ${invoiceFields} FROM invoices WHERE client_id = ? AND id = ?`, [id, invoiceId]);
+        const [response] = await req.pool.query(`SELECT ${invoiceFields} FROM invoices WHERE id = ?`, [invoiceId]);
         if(response.length===0) {
-            throw Object.assign( new Error('Invoice con esa ID no encontrado'),
-            {
-                status: 404,
-                code: 'INVOICE_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+            throw createError('Invoice no encontrado', 404, 'INVOICE_NOT_FOUND');
+        }
+        if(response[0].client_id!==id) {
+            throw createError('Este invoice no le pertenece', 403, 'FORBIDDEN');
         }
 
         const invoiceById = await getInvoiceWithItems(req.pool, response[0].id);
@@ -47,11 +46,9 @@ const getThisInvoice = async (req, res) => {
 const getMyActiveInvoice = async (req, res) => {
     const { id } = req.client;
 
-    const invoiceFields = 'id, status, total, created_at, issue_date, due_date, delivered_at, paid_at';
-
     try {
-        const [response] = await req.pool.query(`SELECT ${invoiceFields} FROM invoices WHERE client_id = ? AND status = "draft"`, [id]);
-        if(response.length===0) return res.status(200).json( response );
+        const [response] = await req.pool.query(`SELECT id FROM invoices WHERE client_id = ? AND status = "draft"`, [id]);
+        if(response.length===0)  return res.status(200).json( response );
 
         const activeInvoice = await getInvoiceWithItems(req.pool, response[0].id);
 

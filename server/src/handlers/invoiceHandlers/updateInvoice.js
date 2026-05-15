@@ -1,3 +1,4 @@
+const createError = require('../../utils/errorBuilder');
 const validation = require('../../utils/validations');
 
 const updateInvoice = async (req, res) => {
@@ -5,39 +6,27 @@ const updateInvoice = async (req, res) => {
         const { id } = req.params;
         validation.validateId(id);
 
-        const [thisInvoice] = await req.pool.query('SELECT status FROM invoices WHERE id = ?', [ id ]);
-        if(thisInvoice.length===0)
-        {
-            throw Object.assign( new Error('Invoice inexistente'),
-            {
-                status: 404,
-                code: 'INVOICE_NOT_FOUND',
-                timestamp: new Date().toISOString()
-            })
+        const [thisInvoice] = await req.pool.query('SELECT status, client_id FROM invoices WHERE id = ?', [ id ]);
+        if(thisInvoice.length===0) {
+            throw createError('Invoice no encontrado', 404, 'INVOICE_NOT_FOUND');
+        }
+
+        if(thisInvoice[0].client_id!==req.client.id) {
+            throw createError('Este invoice no le pertenece', 403, 'FORBIDDEN');
         }
 
         if(thisInvoice[0].status!=='draft') {
-            throw Object.assign( new Error('Solo invoices en estado "draft" pueden ser modificados'),
-            {
-                status: 400,
-                code: "ONLY_DRAFT_INVOICES_CAN_BE_MODIFIED",
-                timestamp: new Date().toISOString()
-            })
+            throw createError(`Invoices con estado ${thisInvoice[0].status} no pueden modificarse, debe estar en estado "draft" para proceder.`, 403, 'ONLY_DRAFT_INVOICES_CAN_BE_MODIFIED');
         }
 
         const productIds = [];
 
         const productsBatch = req.body;
         productsBatch.forEach( ( productInfo ) => {
-            if(productInfo.quantity==undefined || !productInfo.product_id)
-            {
-                throw Object.assign( new Error('Faltan datos necesarios para la relación'),
-                {
-                    status: 400,
-                    code: 'MISSING_RELATION_DATA',
-                    timestamp: new Date().toISOString()
-                })
+            if(productInfo.quantity==undefined || !productInfo.product_id) {
+                throw createError('Faltan datos necesarios para la relación', 400, 'MISSING_RELATION_DATA');
             }
+
             validation.validateId(productInfo.product_id);
             productIds.push(productInfo.product_id);
         })
@@ -47,14 +36,8 @@ const updateInvoice = async (req, res) => {
         const findProductsByIdQuery = `SELECT products.id AS product_id, products.unit_price, products.stock, products.reserved_stock FROM products WHERE products.id IN (${placeHolders})`;
 
         const [allProductsInfo] = await req.pool.query( findProductsByIdQuery, productIds );
-        if(allProductsInfo.length!==productIds.length)
-        {
-            throw Object.assign( new Error('Error trayendo información de productos'),
-            {
-                status: 400,
-                code: "ERROR_FETCHING_PRODUCTS_INFO",
-                timestamp: new Date().toISOString()
-            })
+        if(allProductsInfo.length!==productIds.length) {
+            throw createError('Error trayendo información de productos', 500, 'DATA_CONSISTENCY_ERROR');
         }
 
         const finalValues = [];
@@ -65,22 +48,15 @@ const updateInvoice = async (req, res) => {
 
         productsBatch.forEach( (pInfo) => {
             const fetchedProductInfo = allProductsInfo.find( (x) => x.product_id === pInfo.product_id );
-            if(!fetchedProductInfo)
-            {
-                throw Object.assign( new Error(`Error trayendo información sobre el producto id ${pInfo.product_id}`),
-                {
-                    status: 400,
-                    code: "ERROR_FETCHING_PRODUCT_INFO",
-                    timestamp: new Date().toISOString()
-                })
+            if(!fetchedProductInfo) {
+                throw createError(`Error trayendo información sobre el producto id ${pInfo.product_id}`, 500, 'DATA_CONSISTENCY_ERROR');
             }
-            if(pInfo.quantity<=0)
-            {
+
+            if(pInfo.quantity<=0) {
                 toDestroyValues.push(pInfo.product_id);
                 toDestroyPlaceholders.push('?');
             }
-            else
-            {
+            else {
                 if(fetchedProductInfo.reserved_stock + pInfo.quantity <= fetchedProductInfo.stock)
                 {
                     finalValues.push(id, pInfo.product_id, pInfo.quantity, fetchedProductInfo.unit_price, pInfo.quantity * fetchedProductInfo.unit_price )
@@ -88,12 +64,7 @@ const updateInvoice = async (req, res) => {
                 }
                 else
                 {
-                    throw Object.assign( new Error(`Stock insuficiente en producto ID ${pInfo.product_id}`),
-                    {
-                        status: 400,
-                        code: "INSUFFICIENT_STOCK",
-                        timestamp: new Date().toISOString()
-                    })
+                    throw createError(`Stock insuficiente en producto ID ${pInfo.product_id}`, 409, 'INSUFFICIENT_STOCK');
                 }
             }
         })

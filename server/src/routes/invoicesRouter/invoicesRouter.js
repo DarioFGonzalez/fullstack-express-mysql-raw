@@ -169,9 +169,364 @@ invoicesRouter.use(activeClientOnly);
 
 invoicesRouter.post('/', postInvoice);
 
+/**
+ * @swagger
+ * /invoices/me:
+ *   get:
+ *     summary: (👤) Entrega las facturas del usuario logeado.
+ *     description: Entrega un array con las facturas del usuario logeado.
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un objeto con las facturas de la cuenta logeada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/invoicePublic'
+ *             example:
+ *               - id: cccccccc-cccc-cccc-cccc-cccccccccccc
+ *                 status: draft
+ *                 total: null
+ *                 created_at: 2026-05-07T01:05:57.000Z
+ *                 issue_date: null
+ *                 due_date: null
+ *                 delivered_at: null
+ *                 paid_at: null
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
 invoicesRouter.get('/me', getMyInvoices);
+
+/**
+ * @swagger
+ * /invoices/me/active:
+ *   get:
+ *     summary: (👤) Entrega todos los datos de la factura activa del cliente logeado.
+ *     description: Entrega todos los datos de la factura activa mas los productos relacionados con la misma.
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un objeto con la factura activa y todos los productos relacionados en la propiedad "products".
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/privateInvoice'
+ *                 - type: 'object'
+ *                   description: Objeto vacío cuando no hay factura activa
+ *                   example: {}
+ *             examples:
+ *               con_factura:
+ *                 summary: 📃 Existe una factura activa
+ *                 value:
+ *                   id: 7937fef3-4f19-11f1-aac0-507b9d97da6f
+ *                   client_id: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+ *                   status: draft
+ *                   invoice_number: null
+ *                   issue_date: null
+ *                   due_date: null
+ *                   payment_terms: null
+ *                   total: null
+ *                   notes: null
+ *                   created_at: 2026-05-13T22:17:05.000Z
+ *                   updated_at: 2026-05-13T22:17:05.000Z
+ *                   paid_at: null
+ *                   delivered_at: null
+ *                   products:
+ *                     - product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *                       product_name: Mouse Inalambrico
+ *                       price_at_addition: 45000
+ *                       quantity: 10
+ *                       stock: 150
+ *                       reserved_stock: 0
+ *                       subtotal: 450000
+ *               sin_factura:
+ *                 summary: ❓ Sin factura activa
+ *                 value: {}
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
 invoicesRouter.get('/me/active', getMyActiveInvoice);
+
+/**
+ * @swagger
+ * /invoices/me/:invoiceId:
+ *   get:
+ *     summary: (👤) Entrega todos los datos de la factura activa del cliente logeado.
+ *     description: Entrega todos los datos de la factura activa mas los productos relacionados con la misma.
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Devuelve un objeto con la factura deseada y todos los productos relacionados en la propiedad "products".
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/privateInvoice'
+ *             example:
+ *               id: 7937fef3-4f19-11f1-aac0-507b9d97da6f
+ *               client_id: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+ *               status: draft
+ *               invoice_number: null
+ *               issue_date: null
+ *               due_date: null
+ *               payment_terms: null
+ *               total: null
+ *               notes: null
+ *               created_at: 2026-05-13T22:17:05.000Z
+ *               updated_at: 2026-05-13T22:17:05.000Z
+ *               paid_at: null
+ *               delivered_at: null
+ *               products:
+ *                 - product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *                   product_name: Mouse Inalambrico
+ *                   price_at_addition: 45000
+ *                   quantity: 10
+ *                   stock: 150
+ *                   reserved_stock: 0
+ *                   subtotal: 450000
+ *       400:
+ *         description: ID inexistente o con formato inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               id_no_recibido:
+ *                 summary: ⭕ No enviamos ID
+ *                 value:
+ *                   error: ID no recibido
+ *                   code: ID_REQUIRED
+ *               id_con_formato_inválido:
+ *                 summary: ⚠ Enviamos ID inválido
+ *                 value:
+ *                   error: Formato del ID inválido
+ *                   code: INVALID_ID_FORMAT
+ *       403:
+ *         description: El invoice que buscamos no le pertenece al cliente logeado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Este invoice no le pertenece
+ *               code: FORBIDDEN
+ *       404:
+ *         description: No encontramos un invoice con esa ID en base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Invoice no encontrado
+ *               code: INVOICE_NOT_FOUND
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Error interno del servidor
+ *               code: INTERNAL_SERVER_ERROR
+ */
+
 invoicesRouter.get('/me/:invoiceId', getThisInvoice);
+
+/**
+ * @swagger
+ * /invoices/{id}:
+ *   patch:
+ *     summary: (👤) Agregamos productos a la factura activa.
+ *     description: Enviamos por body los datos a cambiar, usamos el id del cliente logeado como punto de referencia.
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *          example: cccccccc-cccc-cccc-cccc-cccccccccccc
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: 'object'
+ *               required:
+ *                 - quantity
+ *                 - product_id
+ *               properties:
+ *                 quantity:
+ *                   type: integer
+ *                 product_id:
+ *                   type: string
+ *                   format: uuid
+ *           examples:
+ *               enviamos_un_item:
+ *                 summary: ✔ Enviamos un solo item.
+ *                 value:
+ *                   - quantity: 1
+ *                     product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *               enviamos_varios_items:
+ *                 summary: ✔✔ Enviamos varios items.
+ *                 description: Podemos enviar un batch de productos para agregar al invoice.
+ *                 value:
+ *                   - quantity: 2
+ *                     product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *                   - quantity: 3
+ *                     product_id: e7b5f3e4-49b0-11f1-acdd-507b9d97da6f
+ *                   - quantity: 4
+ *                     product_id: e7b58c1f-49b0-11f1-acdd-507b9d97da6f
+ *               item_con_stock_insuficiente:
+ *                 summary: ⚠ Producto sin stock suficiente.
+ *                 value:
+ *                   - quantity: 999
+ *                     product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *               producto_inexistente:
+ *                 summary: ⚠ Producto inexistente.
+ *                 value:
+ *                   - quantity: 1
+ *                     product_id: e7b50914-46b0-12f1-acdd-507b9d97da6f
+ *               falta_dato_clave:
+ *                 summary: ⭕ Falta dato clave.
+ *                 value:
+ *                   - product_id: e7b50924-49b0-11f1-acdd-507b9d97da6f
+ *               enviar_solo_valores_inválidos:
+ *                 summary: ✖ Enviamos solo valores inválidos.
+ *                 description: Enviar solo valores no permitidos para actualización devolverá un mensaje de error.
+ *                 value:
+ *                   name: Dario F. Gonzalez
+ *                   stack: PERN
+ *                   experience: 3+ Years
+ *                   actual_status: Freelancer
+ *                   github: github.com/DarioFGonzalez
+ *                   ready_to_work: true
+ *     responses:
+ *       200:
+ *         description: En caso de que el proceso termine correctamente, recibimos un mensaje de confirmación.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               value:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: 'Invoice actualizado'
+ *       400:
+ *         description: ID inexistente, con formato inválido o faltan datos necesarios para la relacional.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               id_no_recibido:
+ *                 summary: ⭕ No enviamos ID
+ *                 value:
+ *                   error: ID no recibido
+ *                   code: ID_REQUIRED
+ *               id_con_formato_inválido:
+ *                 summary: ⚠ Enviamos ID inválido
+ *                 value:
+ *                   error: Formato del ID inválido
+ *                   code: INVALID_ID_FORMAT
+ *               faltan_datos_clave:
+ *                 summary: ⭕ Faltan datos clave 
+ *                 value:
+ *                   error: Faltan datos necesarios para la relación
+ *                   code: MISSING_RELATION_DATA
+ *       403:
+ *         description: El invoice no le pertenece al cliente logeado o el estado del invoice es inválido para actualizar.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               el_invoice_no_le_pertenece:
+ *                 summary: 🚫 El invoice no nos pertenece
+ *                 description: Si el invoice ID coincide con un registro existente mas el cliente haciendo la petición no es el dueño del mismo, recibiremos un mensaje de error.
+ *                 value:
+ *                   error: Este invoice no le pertenece
+ *                   code: FORBIDDEN
+ *               status_actual_inválido:
+ *                 summary: ⛔ Status inválido
+ *                 description: Si el invoice no está en estado "draft", no podemos actualizarlo.
+ *                 value:
+ *                   error: Invoices con estado {estado actual} no pueden modificarse, debe estar en estado "draft" para proceder.
+ *                   code: ONLY_DRAFT_INVOICES_CAN_BE_MODIFIED
+ *       404:
+ *         description: No encontramos un invoice con esa ID en base de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Invoice no encontrado
+ *               code: INVOICE_NOT_FOUND
+ *       409:
+ *         description: El stock actual del producto no puede cumplir con la demanda de la solicitud.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             example:
+ *               error: Stock insuficiente en producto ID {id del producto}
+ *               code: INSUFFICIENT_STOCK
+ *       500:
+ *         description: Error interno o inconsistencia de datos del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/errorMessage'
+ *             examples:
+ *               no_conseguimos_datos_de_los_productos:
+ *                  summary: ✖✖ Trayendo información de productos en general
+ *                  value:
+ *                    error: Error trayendo información de productos
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               no_conseguimos_datos_de_un_producto:
+ *                  summary: ✖ Trayendo información de un producto específico
+ *                  value:
+ *                    error: Error trayendo información sobre el producto id {id del producto}
+ *                    code: DATA_CONSISTENCY_ERROR
+ *               error_interno_general:
+ *                  summary: ✖ Error interno inesperado
+ *                  value:
+ *                    error: Error interno del servidor
+ *                    code: INTERNAL_SERVER_ERROR
+ */
 
 invoicesRouter.patch('/:id', updateInvoice);
 invoicesRouter.post('/:id/confirm', confirmInvoice);

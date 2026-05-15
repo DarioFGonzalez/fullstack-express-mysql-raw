@@ -314,7 +314,7 @@ const options = {
                     properties: {
                         id: {
                             type: 'string',
-                            description: 'Identificador único universal (UUID) del cliente. Generado automáticamente en el momento del registro.'
+                            description: 'Identificador único universal (UUID) del producto. Generado automáticamente en el momento del registro.'
                         },
                         sku: {
                             type: 'string',
@@ -398,6 +398,55 @@ const options = {
                         unit_price: { type: 'number', format: 'double' },
                         stock: { type: 'integer' },
                         reserved_stock: { type: 'integer' }
+                    }
+                },
+                invoicePrivate: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string', format: 'uuid' },
+                        client_id: { type: 'string' },
+                        status: { type: 'string', enum: ['draft', 'confirmed', 'delivered','paid','cancelled']},
+                        invoice_number: { type: 'string' },
+                        issue_date: { type: 'string', format: 'date', nullable: true },
+                        due_date: { type: 'string', format: 'date', nullable: true },
+                        payment_terms: { type: 'integer', enum: [ 30, 60, 90, 120 ] },
+                        total: { type: 'number', format: 'double', nullable: true },
+                        notes: { type: 'string' },
+                        created_at: { type: 'string', format: 'date-time' },
+                        updated_at: { type: 'string', format: 'date-time' },
+                        paid_at: { type: 'string', format: 'date-time', nullable: true },
+                        delivered_at: { type: 'string', format: 'date-time', nullable: true },
+                        products: {
+                            type: 'array',
+                            items: {
+                                $ref: '#/components/schemas/invoiceItem'
+                            }
+                        }
+                    }
+                },
+                invoicePublic: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'string' },
+                        status: { type: 'string', enum: ['draft', 'confirmed', 'delivered','paid','cancelled']},
+                        total: { type: 'number', format: 'double', nullable: true },
+                        created_at: { type: 'string', format: 'date-time' },
+                        issue_date: { type: 'string', format: 'date', nullable: true },
+                        due_date: { type: 'string', format: 'date', nullable: true },
+                        delivered_at: { type: 'string', format: 'date-time', nullable: true },
+                        paid_at: { type: 'string', format: 'date-time', nullable: true }
+                    }
+                },
+                invoiceItem: {
+                    type: 'object',
+                    properties: {
+                        product_id: { type: 'string' },
+                        product_name: { type: 'string' },
+                        price_at_addition: { type: 'number', format: 'double' },
+                        quantity: { type: 'integer' },
+                        stock: { type: 'integer' },
+                        reserved_stock: { type: 'integer' },
+                        subtotal: { type: 'number', format: 'double' }
                     }
                 },
                 errorMessage: {
@@ -519,7 +568,7 @@ const options = {
                     in: 'query',
                     name: 'unit_price',
                     schema: { type: 'number', format: 'double' },
-                    example: '35000.00',
+                    example: 35000.00,
                     description: 'Buscamos por precio exacto'
                 },
                 queryStock: {

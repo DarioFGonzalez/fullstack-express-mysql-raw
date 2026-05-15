@@ -12,7 +12,8 @@ const pool = mysql.createPool({
     //traffic
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    decimalNumbers: true,
 });
 
 module.exports = pool;

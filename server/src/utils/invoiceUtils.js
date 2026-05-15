@@ -1,15 +1,11 @@
+const createError = require("./errorBuilder");
+
 const getInvoiceWithItems = async (pool, id) => {
     const getInvoiceByIdQuery = 'SELECT * FROM invoices WHERE id = ?';
 
     const [invoice] = await pool.query(getInvoiceByIdQuery, [id]);
-    if(invoice.length===0)
-    {
-        throw Object.assign( new Error('Invoice no encontrado'),
-        {
-            status: 404,
-            code: 'INVOICE_NOT_FOUND',
-            timestamp: new Date().toISOString()
-        })
+    if(invoice.length===0) {
+        throw createError('Invoice no encontrado', 404, 'INVOICE_NOT_FOUND');
     }
 
     const getProductsRelatedToInvoice =
